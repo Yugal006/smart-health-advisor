@@ -1,9 +1,4 @@
 # app.py
-from backend.blood_donor_engine import (
-    init_db,
-    register_donor,
-    search_donors
-)
 from flask import Flask, render_template, request
 from backend.blood_donor_engine import (
     init_db,
