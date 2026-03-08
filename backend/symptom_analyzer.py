@@ -1,55 +1,29 @@
 # backend/symptom_analyzer.py
 
-from collections import defaultdict
-
-# Symptom → Possible Conditions Map
-SYMPTOM_CONDITION_MAP = {
-    "fever": ["viral infection", "flu", "covid-19"],
-    "headache": ["migraine", "tension headache", "flu"],
-    "cough": ["flu", "common cold", "bronchitis"],
-    "sore throat": ["common cold", "flu"],
-    "fatigue": ["anemia", "viral infection", "thyroid disorder"],
-    "chest pain": ["heart disease", "anxiety", "acid reflux"],
-    "shortness of breath": ["asthma", "heart disease", "covid-19"],
-    "nausea": ["food poisoning", "gastritis", "migraine"],
-    "vomiting": ["food poisoning", "stomach infection"],
-    "dizziness": ["low blood pressure", "anemia", "dehydration"]
-}
+from ml.predict_disease import predict_disease
 
 
 def analyze_symptoms(user_data):
     """
-    Takes validated user_data.
-    Returns ranked list of possible conditions.
+    Uses ML model to predict diseases from symptoms.
+    Returns ranked conditions.
     """
 
-    selected_symptoms = user_data["symptoms"]
+    symptoms = user_data["symptoms"]
 
-    condition_scores = defaultdict(int)
+    try:
+        predictions = predict_disease(symptoms, top_k=5)
 
-    # Score conditions based on symptom matches
-    for symptom in selected_symptoms:
-        if symptom in SYMPTOM_CONDITION_MAP:
-            for condition in SYMPTOM_CONDITION_MAP[symptom]:
-                condition_scores[condition] += 1
-
-    if not condition_scores:
+    except Exception as e:
+        print("ML prediction error:", e)
         return []
 
-    # Sort by highest score
-    ranked_conditions = sorted(
-        condition_scores.items(),
-        key=lambda x: x[1],
-        reverse=True
-    )
+    ranked_conditions = []
 
-    # Convert to structured list
-    result = [
-        {
-            "condition": condition,
-            "match_score": score
-        }
-        for condition, score in ranked_conditions
-    ]
+    for pred in predictions:
+        ranked_conditions.append({
+            "condition": pred["disease"],
+            "match_score": pred["probability"]
+        })
 
-    return result
+    return ranked_conditions

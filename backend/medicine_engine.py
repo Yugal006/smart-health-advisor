@@ -29,7 +29,10 @@ def suggest_medicines(ranked_conditions, user_data, risk_data):
     """
 
     if not ranked_conditions:
-        return []
+        return {
+            "recommended_medicines": [],
+            "warnings": []
+        }
 
     top_condition = ranked_conditions[0]["condition"]
     suggested = CONDITION_MEDICINE_MAP.get(top_condition, [])
