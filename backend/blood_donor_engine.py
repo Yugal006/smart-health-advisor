@@ -84,7 +84,7 @@ def register_donor(name, age, blood_group, city, phone, last_donation):
 
     if cursor.fetchone():
         conn.close()
-        return False, "Donor already registered."
+        return False, "Donor already registered."  #may not be needed since we are checking for existing donor above
 
     # Insert new donor
     cursor.execute("""
