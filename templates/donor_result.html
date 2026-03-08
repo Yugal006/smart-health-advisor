@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Donor Result{% endblock %}
+
+{% block content %}
+
+<h1>Blood Donor System</h1>
+
+{% if search %}
+
+<h2>Search Results</h2>
+
+{% if donors and donors|length > 0 %}
+<ul>
+    {% for donor in donors %}
+    <li>
+        <strong>{{ donor[0] }}</strong> |
+        Age: {{ donor[1] }} |
+        Blood Group: <b>{{ donor[2] }}</b> |
+        City: {{ donor[3] }} |
+        Phone: {{ donor[4] }} |
+        Last Donation: {{ donor[5] }}
+
+        {% if donor[2] == requested_group %}
+        <br>
+        <span style="color:blue;">
+            ✔ Exact blood group match
+        </span>
+        {% else %}
+        <br>
+        <span style="color:green;">
+            ✔ Compatible donor – this blood group can safely donate to {{ requested_group }}
+        </span>
+        {% endif %}
+
+    </li>
+    <br>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No donors found for selected criteria.</p>
+{% endif %}
+
+{% else %}
+
+{% if success %}
+<h2 style="color:green;">{{ message }}</h2>
+{% else %}
+<h2 style="color:red;">{{ message }}</h2>
+{% endif %}
+
+{% endif %}
+
+<hr>
+
+<a href="/" class="btn">Back to Home</a>
+<a href="/donor/search" class="btn">Search Again</a>
+<a href="/donor/register" class="btn">Register Donor</a>
+
+{% endblock %}

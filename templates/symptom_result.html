@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Result{% endblock %}
+
+{% block content %}
+
+<h1>Health Analysis Result</h1>
+
+<h2>Patient Info</h2>
+<p><strong>Name:</strong> {{ result.user.name }}</p>
+<p><strong>Age:</strong> {{ result.user.age }}</p>
+
+<hr>
+
+<h2>Analysis</h2>
+<p><strong>Most Likely Condition:</strong> {{ result.analysis.top_condition }}</p>
+
+<h3>All Possible Conditions:</h3>
+<ul>
+    {% for condition in result.analysis.all_possible_conditions %}
+        <li>
+            {{ condition.condition }}
+            (Match Score: {{ condition.match_score }})
+        </li>
+    {% endfor %}
+</ul>
+
+<hr>
+
+<h2>Risk Assessment</h2>
+<p>
+    Risk Level:
+    <span class="risk-{{ result.risk_assessment.risk_level }}">
+        {{ result.risk_assessment.risk_level }}
+    </span>
+</p>
+<p><strong>Risk Score:</strong> {{ result.risk_assessment.risk_score }}</p>
+
+<hr>
+
+<h2>Recommended Medicines</h2>
+<ul>
+    {% for med in result.medication.recommended %}
+        <li>{{ med }}</li>
+    {% endfor %}
+</ul>
+
+<hr>
+
+<h2>Appointment Advice</h2>
+<p><strong>Doctor Type:</strong> {{ result.appointment.doctor_type }}</p>
+<p><strong>Urgency:</strong> {{ result.appointment.urgency }}</p>
+<p>{{ result.appointment.message }}</p>
+
+<hr>
+
+<h3>Disclaimer</h3>
+<p>{{ result.disclaimer }}</p>
+
+<br>
+<a href="/" class="btn">Analyze Again</a>
+
+{% endblock %}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Smart Health Advisor{% endblock %}</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            max-width: 900px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+
+        hr {
+            margin: 25px 0;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+
+        .risk-low { color: green; font-weight: bold; }
+        .risk-moderate { color: orange; font-weight: bold; }
+        .risk-high { color: red; font-weight: bold; }
+    </style>
+
+</head>
+<body>
+
+<div class="container">
+    {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>
