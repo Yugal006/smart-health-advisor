@@ -17,11 +17,8 @@
 
 <h3>All Possible Conditions:</h3>
 <ul>
-    {% for condition in result.analysis.all_possible_conditions %}
-        <li>
-            {{ condition.condition }}
-            (Match Score: {{ condition.match_score }})
-        </li>
+    {% for cond in ranked_conditions %}
+    <li>{{ cond["condition"].title() }} - {{ cond["match_score"] }}%</li>
     {% endfor %}
 </ul>
 
@@ -41,7 +38,7 @@
 <h2>Recommended Medicines</h2>
 <ul>
     {% for med in result.medication.recommended %}
-        <li>{{ med }}</li>
+    <li>{{ med }}</li>
     {% endfor %}
 </ul>
 

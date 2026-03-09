@@ -1,0 +1,43 @@
+.suggestion-box {
+    border: 2px solid #ccc;
+    background: white;
+    max-height: 200px;
+    overflow-y: auto;
+    position: absolute;
+    width: 300px;
+    z-index: 1000;
+}
+
+.suggestion-item {
+    padding: 8px;
+    cursor: pointer;
+}
+
+.suggestion-item:hover {
+    background: #f0f0f0;
+}
+
+.symptom-tag {
+    display: inline-block;
+    background: #007bff;
+    color: white;
+    padding: 6px 10px;
+    margin: 4px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.symptom-tag button {
+    margin-left: 8px;
+    background: none;
+    border: none;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#selectedSymptoms {
+    margin-top: 10px;
+    max-height: 120px;
+    overflow-y: auto;
+}
