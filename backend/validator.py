@@ -7,7 +7,7 @@ class ValidationError(Exception):
 
 def validate_user_input(form_data):
     """
-    Validates and cleans structured dropdown-based form input.
+    Validates and cleans structured form input.
     Returns cleaned dictionary if valid.
     Raises ValidationError if invalid.
     """
@@ -19,15 +19,15 @@ def validate_user_input(form_data):
         weight = float(form_data.get("weight", 0))
         severity = int(form_data.get("severity", 0))
 
-        # Multi-select dropdowns (Flask sends list)
+        # Multi-select symptoms
         symptoms = form_data.getlist("symptoms")
-        allergies = form_data.getlist("allergies")
-        conditions = form_data.getlist("existing_conditions")
 
     except Exception:
         raise ValidationError("Invalid input format.")
 
-    # ---- Basic Validations ----
+    # -------------------------
+    # Basic Validations
+    # -------------------------
 
     if not name:
         raise ValidationError("Name is required.")
@@ -44,16 +44,16 @@ def validate_user_input(form_data):
     if not symptoms:
         raise ValidationError("At least one symptom must be selected.")
 
-    # ---- Normalize Data ----
+    # -------------------------
+    # Normalize Data
+    # -------------------------
 
     cleaned_data = {
         "name": name,
         "age": age,
         "weight": weight,
         "severity": severity,
-        "symptoms": [s.lower() for s in symptoms],
-        "allergies": [a.lower() for a in allergies],
-        "existing_conditions": [c.lower() for c in conditions],
+        "symptoms": [s.strip().lower() for s in symptoms]
     }
 
     return cleaned_data

@@ -1,20 +1,20 @@
 # backend/medicine_engine.py
 
-# Condition → Suggested Medicines
-CONDITION_MEDICINE_MAP = {
-    "flu": ["paracetamol", "ibuprofen"],
-    "viral infection": ["paracetamol"],
-    "migraine": ["ibuprofen"],
-    "tension headache": ["paracetamol"],
-    "common cold": ["cetirizine", "paracetamol"],
-    "bronchitis": ["cough syrup"],
-    "heart disease": ["consult specialist only"],
-    "asthma": ["inhaler"],
-    "food poisoning": ["oral rehydration salts"],
-    "gastritis": ["antacid"]
-}
+import csv
+import os
 
+# ---------------------------------------------------
+# File Path
+# ---------------------------------------------------
+
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+MEDICATIONS_CSV_PATH = os.path.join(BASE_DIR, "data", "medical_dataset.csv")
+
+
+# ---------------------------------------------------
 # Allergy → Unsafe Medicines
+# ---------------------------------------------------
+
 ALLERGY_MEDICINE_CONFLICTS = {
     "nsaid": ["ibuprofen"],
     "paracetamol": ["paracetamol"],
@@ -22,54 +22,93 @@ ALLERGY_MEDICINE_CONFLICTS = {
 }
 
 
-def suggest_medicines(ranked_conditions, user_data, risk_data):
-    """
-    Suggest medicines based on top condition.
-    Applies allergy and risk filtering.
-    """
+# ---------------------------------------------------
+# Load Condition → Medicines Mapping
+# ---------------------------------------------------
 
+def load_condition_medicine_map():
+
+    condition_map = {}
+
+    try:
+
+        with open(MEDICATIONS_CSV_PATH, newline="", encoding="utf-8") as f:
+
+            reader = csv.DictReader(f)
+
+            for row in reader:
+
+                disease = row["Disease"].strip().lower()
+                medication = row["Medication"].strip()
+                recommendation = row["Recommendation"].strip()
+
+                if medication:
+
+                    medicines = [m.strip().lower() for m in medication.split(";")]
+
+                else:
+                    medicines = []
+
+                condition_map[disease] = {
+                    "medicines": medicines,
+                    "recommendation": recommendation
+                }
+
+    except Exception as e:
+        print("Error loading medication dataset:", e)
+
+    return condition_map
+
+
+# Load dataset once
+CONDITION_MEDICINE_MAP = load_condition_medicine_map()
+
+
+# ---------------------------------------------------
+# Medicine Suggestion Logic
+# ---------------------------------------------------
+
+def suggest_medicines(ranked_conditions, user_data, risk_data):
     if not ranked_conditions:
         return {
             "recommended_medicines": [],
             "warnings": []
         }
 
-    top_condition = ranked_conditions[0]["condition"]
-    suggested = CONDITION_MEDICINE_MAP.get(top_condition, [])
+    top_conditions = [c["condition"].lower() for c in ranked_conditions[:3]]
 
-    allergies = user_data["allergies"]
-    age = user_data["age"]
-    risk_level = risk_data["risk_level"]
-
-    safe_medicines = []
+    medicines = []
     warnings = []
+    allergies = []  # You can expand to take actual user allergies
+    age = user_data.get("age", 0)
+    risk_level = risk_data.get("risk_level", "low")
 
-    for medicine in suggested:
-
-        # 1️⃣ Allergy Filter
-        unsafe = False
-        for allergy in allergies:
-            if allergy in ALLERGY_MEDICINE_CONFLICTS:
-                if medicine in ALLERGY_MEDICINE_CONFLICTS[allergy]:
-                    unsafe = True
-                    warnings.append(f"{medicine} removed due to {allergy} allergy")
-
-        if unsafe:
+    for cond in top_conditions:
+        data = CONDITION_MEDICINE_MAP.get(cond)
+        if not data:
+            warnings.append(f"No medicine data available for {cond}")
             continue
 
-        # 2️⃣ Age Restriction (basic rule example)
-        if age < 12 and medicine == "ibuprofen":
-            warnings.append("Ibuprofen avoided for children under 12")
+        # Doctor-required check
+        if data["recommendation"].lower() == "doctor required":
+            warnings.append(f"Doctor consultation required for {cond}")
             continue
 
-        # 3️⃣ High Risk Override
-        if risk_level in ["high", "emergency"]:
-            warnings.append("High risk detected – medicine suggestion limited")
-            return []
+        # Add safe medicines
+        for med in data["medicines"]:
+            if med not in medicines:
+                # Example age restriction
+                if age < 12 and med == "ibuprofen":
+                    warnings.append("Ibuprofen avoided for children under 12")
+                    continue
+                medicines.append(med)
 
-        safe_medicines.append(medicine)
+    # High risk override
+    if risk_level in ["high", "emergency"]:
+        warnings.append("High risk detected — consult doctor immediately")
+        medicines = []
 
     return {
-        "recommended_medicines": safe_medicines,
+        "recommended_medicines": medicines,
         "warnings": warnings
     }
