@@ -1,58 +1,100 @@
 {% extends "base.html" %}
 
-{% block title %}Analysis Result{% endblock %}
+{% block title %}Health Analysis Result{% endblock %}
 
 {% block content %}
 
 <h1>Health Analysis Result</h1>
 
-<h2>Patient Info</h2>
-<p><strong>Name:</strong> {{ result.user.name }}</p>
-<p><strong>Age:</strong> {{ result.user.age }}</p>
+<!-- Patient Info -->
+<div class="card">
+    <h2>Patient Info</h2>
+    <p><strong>Name:</strong> {{ result.user.name }}</p>
+    <p><strong>Age:</strong> {{ result.user.age }}</p>
+</div>
 
-<hr>
+<!-- Analysis -->
+<div class="card">
+    <h2>Analysis</h2>
+    <p><strong>Most Likely Condition:</strong> {{ result.analysis.top_condition }}</p>
+    <h3>All Possible Conditions:</h3>
+    {% if ranked_conditions %}
+    <ul>
+        {% for cond in ranked_conditions %}
+        <li>{{ cond["condition"].title() }} - {{ cond["confidence"] }}%</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No matching conditions found.</p>
+    {% endif %}
+</div>
 
-<h2>Analysis</h2>
-<p><strong>Most Likely Condition:</strong> {{ result.analysis.top_condition }}</p>
+<!-- Risk Assessment -->
+<div class="card">
+    <h2>Risk Assessment</h2>
+    <p><strong>Risk Level:</strong> 
+        <span class="risk-{{ result.risk_assessment.risk_level }}">
+            {{ result.risk_assessment.risk_level | title }}
+        </span>
+    </p>
+    <p><strong>Risk Score:</strong> {{ result.risk_assessment.risk_score }}</p>
+</div>
 
-<h3>All Possible Conditions:</h3>
-<ul>
-    {% for cond in ranked_conditions %}
-    <li>{{ cond["condition"].title() }} - {{ cond["match_score"] }}%</li>
-    {% endfor %}
-</ul>
+<!-- Recommended Medicines -->
+<div class="card">
+    <h2>Recommended Medicines</h2>
+    {% if result.medication.recommended %}
+    <ul>
+        {% for med in result.medication.recommended %}
+        <li>{{ med }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No medicines recommended.</p>
+    {% endif %}
+</div>
 
-<hr>
+<!-- Self-Care Advice -->
+<div class="card">
+    <h2>Self-Care Advice</h2>
+    {% if result.medication.self_care %}
+    <ul>
+        {% for advice in result.medication.self_care %}
+        <li>{{ advice }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No specific self-care advice available.</p>
+    {% endif %}
+</div>
 
-<h2>Risk Assessment</h2>
-<p>
-    Risk Level:
-    <span class="risk-{{ result.risk_assessment.risk_level }}">
-        {{ result.risk_assessment.risk_level }}
-    </span>
-</p>
-<p><strong>Risk Score:</strong> {{ result.risk_assessment.risk_score }}</p>
+<!-- Warnings -->
+<div class="card">
+    <h2>Warnings</h2>
+    {% if result.medication.warnings %}
+    <ul>
+        {% for warning in result.medication.warnings %}
+        <li style="color: red; font-weight: bold;">{{ warning }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No warnings.</p>
+    {% endif %}
+</div>
 
-<hr>
+<!-- Appointment Advice -->
+<div class="card">
+    <h2>Appointment Advice</h2>
+    <p><strong>Doctor Type:</strong> {{ result.appointment.doctor_type }}</p>
+    <p><strong>Urgency:</strong> {{ result.appointment.urgency }}</p>
+    <p>{{ result.appointment.message }}</p>
+</div>
 
-<h2>Recommended Medicines</h2>
-<ul>
-    {% for med in result.medication.recommended %}
-    <li>{{ med }}</li>
-    {% endfor %}
-</ul>
-
-<hr>
-
-<h2>Appointment Advice</h2>
-<p><strong>Doctor Type:</strong> {{ result.appointment.doctor_type }}</p>
-<p><strong>Urgency:</strong> {{ result.appointment.urgency }}</p>
-<p>{{ result.appointment.message }}</p>
-
-<hr>
-
-<h3>Disclaimer</h3>
-<p>{{ result.disclaimer }}</p>
+<!-- Disclaimer -->
+<div class="card">
+    <h3>Disclaimer</h3>
+    <p>{{ result.disclaimer }}</p>
+</div>
 
 <br>
 <a href="/" class="btn">Analyze Again</a>

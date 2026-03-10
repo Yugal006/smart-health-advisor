@@ -37,6 +37,7 @@ def format_final_response(
 
         "medication": {
             "recommended": medicine_data.get("recommended_medicines", []),
+            "self_care": medicine_data.get("self_care", []),
             "warnings": medicine_data.get("warnings", [])
         },
 

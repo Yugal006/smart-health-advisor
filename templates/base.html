@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>{% block title %}Smart Health Advisor{% endblock %}</title>
 
@@ -18,10 +19,12 @@
             background: white;
             padding: 30px;
             border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
-        h1, h2, h3 {
+        h1,
+        h2,
+        h3 {
             color: #2c3e50;
         }
 
@@ -42,17 +45,52 @@
             background-color: #2980b9;
         }
 
-        .risk-low { color: green; font-weight: bold; }
-        .risk-moderate { color: orange; font-weight: bold; }
-        .risk-high { color: red; font-weight: bold; }
+        .risk-low {
+            color: green;
+            font-weight: bold;
+        }
+
+        .risk-moderate {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .risk-high {
+            color: red;
+            font-weight: bold;
+        }
+
+        .card {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .card h2,
+        .card h3 {
+            margin-top: 0;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 5px;
+        }
     </style>
 
 </head>
+
 <body>
 
-<div class="container">
-    {% block content %}{% endblock %}
-</div>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
 
 </body>
+
 </html>

@@ -1,5 +1,5 @@
 # backend/risk_engine.py
-
+from ml.predict_disease import normalize_symptom
 import csv
 import os
 
@@ -79,11 +79,11 @@ def evaluate_risk(user_data):
     Evaluates personalized risk level.
     Returns structured risk assessment.
     """
-
     age = user_data.get("age", 0)
     severity = user_data.get("severity", 0)
     symptoms = user_data.get("symptoms", [])
     existing_conditions = user_data.get("existing_conditions", [])
+    predicted_condition = user_data.get("predicted_condition", "")
 
     flags = []
 
@@ -98,6 +98,9 @@ def evaluate_risk(user_data):
     # ---------------------------------------------------
     # Emergency Severity Check
     # ---------------------------------------------------
+    if predicted_condition in HIGH_RISK_CONDITIONS:
+        risk_score += 3
+        flags.append("High-risk predicted condition")
 
     if severity >= 9:
         return {

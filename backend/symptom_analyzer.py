@@ -1,45 +1,46 @@
 # backend/symptom_analyzer.py
 
 from ml.predict_disease import predict_disease
-import re
 
-def analyze_symptoms(user_data):
+def analyze_symptoms(user_data, top_k=5):
     """
-    Uses ML model to predict diseases from symptoms.
-    Returns ranked possible conditions.
+    Predict diseases from user symptoms using trained ML model.
+    Returns ranked list with match scores.
     """
-
-    # Raw input from frontend
+    # -----------------------------
+    # 1. Extract symptoms from user input
+    # -----------------------------
     raw_input = user_data.get("symptoms", [])
+    if not raw_input:
+        return [{"rank": 1, "condition": "Not clearly identified", "match_score": 0}]
 
-    # Normalize and split concatenated symptoms
-    symptoms = []
-    for s in raw_input:
-        # replace commas with space
-        s_clean = s.replace(",", " ").lower()
-        # split on spaces
-        tokens = s_clean.split()
-        # optional: further split concatenated words using regex for letters+digits
-        for t in tokens:
-            # remove non-alphabetic chars, just in case
-            t = re.sub(r'[^a-z_]', '', t)
-            if t:
-                symptoms.append(t)
-
-    if not symptoms:
-        return []
-
+    # -----------------------------
+    # 2. Predict using ML model
+    # -----------------------------
     try:
-        # Predict top 5 conditions
-        predictions = predict_disease(symptoms, top_k=5)
-
+        predictions = predict_disease(raw_input, top_k=top_k)
     except Exception as e:
-        print("ML prediction error:", e)
-        return []
+        print("Prediction error:", e)
+        return [{"rank": 1, "condition": "Not clearly identified", "match_score": 0}]
 
+    # -----------------------------
+    # 3. Build ranked output
+    # -----------------------------
     ranked_conditions = [
-        {"rank": i+1, "condition": pred["disease"], "match_score": pred["probability"]}
+        {
+            "rank": i + 1,
+            "condition": pred["disease"],
+            "confidence": pred["probability"]
+        }
         for i, pred in enumerate(predictions)
     ]
+
+    # Ensure fallback
+    if not ranked_conditions:
+        ranked_conditions.append({
+            "rank": 1,
+            "condition": "Not clearly identified",
+            "match_score": 0
+        })
 
     return ranked_conditions
