@@ -1,3 +1,5 @@
+#ml/train_model.py
+
 import pandas as pd
 import joblib
 import os
@@ -11,58 +13,90 @@ from sklearn.metrics import accuracy_score, classification_report
 # 1. CONFIGURATION
 # =====================================================
 
-DATA_PATH = "data/Final_Augmented_dataset_Diseases_and_Symptoms.csv"
+DATASET_1 = "data/Final_Augmented_dataset_Diseases_and_Symptoms.csv"
+DATASET_2 = "data/expanded_symptoms.csv"
+
 MODEL_PATH = "ml/disease_model.pkl"
 FEATURE_PATH = "ml/symptom_columns.pkl"
 
 
 # =====================================================
-# 2. LOAD DATASET
+# 2. LOAD DATASETS
 # =====================================================
 
-print("\nLoading dataset...")
+print("\nLoading datasets...")
 
-df = pd.read_csv(DATA_PATH)
+df1 = pd.read_csv(DATASET_1)
+df2 = pd.read_csv(DATASET_2)
 
-print("Dataset loaded successfully")
-print("Original Dataset Shape:", df.shape)
+print("Dataset 1 shape:", df1.shape)
+print("Dataset 2 shape:", df2.shape)
 
 
 # =====================================================
-# 3. REMOVE RARE DISEASES (only 1 sample)
+# ALIGN SYMPTOM COLUMNS
 # =====================================================
 
-disease_counts = df.iloc[:, 0].value_counts()
+print("\nAligning symptom columns...")
+
+# normalize disease column
+df1.rename(columns={df1.columns[0]: "disease"}, inplace=True)
+df2.rename(columns={df2.columns[0]: "disease"}, inplace=True)
+
+symptoms1 = set(df1.columns) - {"disease"}
+symptoms2 = set(df2.columns) - {"disease"}
+
+all_symptoms = symptoms1.union(symptoms2)
+
+print("Total symptoms after merge:", len(all_symptoms))
+
+ordered_columns = ["disease"] + sorted(all_symptoms)
+
+df1 = df1.reindex(columns=ordered_columns, fill_value=0)
+df2 = df2.reindex(columns=ordered_columns, fill_value=0)
+
+# =====================================================
+# 4. MERGE DATASETS
+# =====================================================
+
+print("\nMerging datasets...")
+
+df = pd.concat([df1, df2], ignore_index=True)
+
+print("Merged dataset shape:", df.shape)
+
+
+# =====================================================
+# 5. REMOVE RARE DISEASES
+# =====================================================
+
+print("\nRemoving rare diseases...")
+
+disease_counts = df["disease"].value_counts()
 
 valid_diseases = disease_counts[disease_counts > 1].index
 
-df = df[df.iloc[:, 0].isin(valid_diseases)]
+df = df[df["disease"].isin(valid_diseases)]
 
-print("Dataset after removing rare diseases:", df.shape)
+print("Dataset after filtering:", df.shape)
 
 
 # =====================================================
-# 4. PREPARE FEATURES & TARGET
+# 6. PREPARE FEATURES
 # =====================================================
 
-# disease column
-y = df.iloc[:, 0]
+y = df["disease"]
+X = df.drop("disease", axis=1)
 
-# symptom columns
-X = df.iloc[:, 1:]
-
-# reduce memory (values are 0/1)
 X = X.astype("int8")
 
-print("\nFeature Matrix Shape:", X.shape)
-print("Target Shape:", y.shape)
-
-# save symptom column names
 symptom_columns = X.columns.tolist()
+
+print("\nFeature matrix:", X.shape)
 
 
 # =====================================================
-# 5. TRAIN / TEST SPLIT
+# 7. TRAIN TEST SPLIT
 # =====================================================
 
 print("\nSplitting dataset...")
@@ -72,8 +106,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     y,
     test_size=0.2,
     random_state=42,
-    stratify=y,
-    shuffle=True
+    stratify=y
 )
 
 print("Training samples:", len(X_train))
@@ -81,16 +114,16 @@ print("Testing samples:", len(X_test))
 
 
 # =====================================================
-# 6. TRAIN MODEL
+# 8. TRAIN MODEL
 # =====================================================
 
 print("\nTraining Random Forest model...")
 
 model = RandomForestClassifier(
-    n_estimators=80,
+    n_estimators=120,
     max_depth=25,
     min_samples_split=5,
-    n_jobs=2,
+    n_jobs=-1,
     random_state=42
 )
 
@@ -100,7 +133,7 @@ print("Model training completed")
 
 
 # =====================================================
-# 7. MODEL EVALUATION
+# 9. EVALUATE MODEL
 # =====================================================
 
 print("\nEvaluating model...")
@@ -116,7 +149,7 @@ print(classification_report(y_test, y_pred))
 
 
 # =====================================================
-# 8. SAVE MODEL
+# 10. SAVE MODEL
 # =====================================================
 
 print("\nSaving model...")
@@ -126,12 +159,8 @@ os.makedirs("ml", exist_ok=True)
 joblib.dump(model, MODEL_PATH)
 joblib.dump(symptom_columns, FEATURE_PATH)
 
-print("Model saved at:", MODEL_PATH)
-print("Symptom columns saved at:", FEATURE_PATH)
+print("Model saved to:", MODEL_PATH)
+print("Symptom columns saved to:", FEATURE_PATH)
 
 
-# =====================================================
-# 9. TRAINING COMPLETE
-# =====================================================
-
-print("\nML training pipeline completed successfully 🚀")
+print("\nTraining pipeline completed successfully 🚀")
