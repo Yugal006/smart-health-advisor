@@ -1,43 +1,64 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f9;
+}
+
+.suggestion-container {
+    position: relative; /* relative container for suggestion box */
+    width: 100%;
+    max-width: 300px;
+}
+
 .suggestion-box {
     border: 2px solid #ccc;
     background: white;
     max-height: 200px;
     overflow-y: auto;
     position: absolute;
-    width: 300px;
+    width: 100%;  /* match parent container */
+    top: 100%;    /* place below input */
+    left: 0;
     z-index: 1000;
+    box-sizing: border-box;
+    display: none; /* hidden initially */
 }
 
 .suggestion-item {
     padding: 8px;
-    cursor: pointer;
+    cursor: pointer; /* pointer/finger */
+    transition: background 0.2s, color 0.2s;
 }
 
 .suggestion-item:hover {
-    background: #f0f0f0;
-}
-
-.symptom-tag {
-    display: inline-block;
-    background: #007bff;
+    background: #ffa500; /* ginger hover */
     color: white;
-    padding: 6px 10px;
-    margin: 4px;
-    border-radius: 20px;
-    cursor: pointer;
-}
-
-.symptom-tag button {
-    margin-left: 8px;
-    background: none;
-    border: none;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
 }
 
 #selectedSymptoms {
     margin-top: 10px;
-    max-height: 120px;
-    overflow-y: auto;
+    max-height: 150px;      /* allow scroll if too many symptoms */
+    overflow-y: auto;        /* vertical scroll */
+    overflow-x: hidden;      /* prevent horizontal scroll */
+    display: flex;
+    flex-wrap: wrap;         /* wrap to new line */
+    gap: 4px;                /* spacing between tags */
+}
+
+.symptom-tag {
+    display: inline-flex;    /* better for multi-line layouts */
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;        /* reduce size so scaling doesn’t overflow */
+    color: red;
+    font-weight: bold;
+    border-radius: 16px;     /* rounded pill shape */
+    background: #ffe6e6;     /* light red background to separate from container */
+    cursor: pointer;
+    transition: color 0.2s;  /* remove transform scaling */
+    white-space: nowrap;      /* keep text in one line per tag */
+}
+
+.symptom-tag:hover {
+    color: darkred;
+    background: #ffcccc;     /* slightly darker on hover */
 }

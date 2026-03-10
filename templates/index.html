@@ -4,6 +4,8 @@
 
 {% block content %}
 
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
 <h1>Smart Health Advisor</h1>
 
 <form action="/analyze" method="POST">
@@ -24,13 +26,13 @@
     <input type="number" name="weight" required><br><br>
 
     <label>Search Symptoms</label>
-
-    <input type="text" id="symptomSearch" placeholder="Type to search symptoms..." autocomplete="off" />
-
-    <div id="suggestionBox" class="suggestion-box"></div>
+    <div class="suggestion-container">
+        <input type="text" id="symptomSearch" placeholder="Type to search symptoms..." autocomplete="off" style="width:100%;">
+        <div id="suggestionBox" class="suggestion-box"></div>
+    </div>
     <br>
-    <h4>Selected Symptoms</h4>
 
+    <h4>Selected Symptoms</h4>
     <div id="selectedSymptoms"></div>
 
     <div id="checkboxContainer" style="display:none;">
@@ -41,122 +43,119 @@
         </label><br>
         {% endfor %}
     </div>
+
     <label>Severity</label>
-
     <input type="range" min="1" max="10" value="5" id="severitySlider" name="severity">
-
     <span id="severityValue">5</span>
     <hr>
+
     <button type="submit" class="btn">Analyze</button>
     <br><br>
     <a href="/donor/register" class="btn">Blood Donor System</a>
 
 </form>
-<script>
 
-    const allSymptoms = [
-        {% for symptom in symptoms %}
+<script>
+const allSymptoms = [
+    {% for symptom in symptoms %}
     "{{ symptom }}",
-        {% endfor %}
-    ];
+    {% endfor %}
+];
 
-    const searchInput = document.getElementById("symptomSearch");
-    const suggestionBox = document.getElementById("suggestionBox");
-    const selectedContainer = document.getElementById("selectedSymptoms");
+const searchInput = document.getElementById("symptomSearch");
+const suggestionBox = document.getElementById("suggestionBox");
+const selectedContainer = document.getElementById("selectedSymptoms");
+let selectedSymptoms = [];
 
-    let selectedSymptoms = [];
+// Search input
+searchInput.addEventListener("input", function() {
+    const query = this.value.toLowerCase();
+    suggestionBox.innerHTML = "";
+    suggestionBox.style.display = "none";
 
-    searchInput.addEventListener("input", function () {
+    if (!query) return;
 
-        const query = this.value.toLowerCase();
-        suggestionBox.innerHTML = "";
+    const matches = allSymptoms
+        .filter(s => s.toLowerCase().startsWith(query))
+        .concat(allSymptoms.filter(s => s.toLowerCase().includes(query) && !s.toLowerCase().startsWith(query)))
+        .slice(0, 10);
 
-        if (query.length === 0) return;
+    if(matches.length > 0) suggestionBox.style.display = "block";
 
-        const matches = allSymptoms
-            .filter(symptom => symptom.toLowerCase().startsWith(query))
-            .concat(
-                allSymptoms.filter(symptom =>
-                    symptom.toLowerCase().includes(query) &&
-                    !symptom.toLowerCase().startsWith(query)
-                )
-            )
-            .slice(0, 10);
-
-        matches.forEach(symptom => {
-
-            const div = document.createElement("div");
-            div.className = "suggestion-item";
-            div.innerText = symptom.replaceAll("_", " ");
-
-            div.onclick = () => addSymptom(symptom);
-
-            suggestionBox.appendChild(div);
-        });
+    matches.forEach(symptom => {
+        const div = document.createElement("div");
+        div.className = "suggestion-item";
+        div.textContent = symptom.replaceAll("_"," ");
+        div.onclick = () => addSymptom(symptom);
+        suggestionBox.appendChild(div);
     });
+});
 
-    function addSymptom(symptom) {
+// Add symptom
+function addSymptom(symptom) {
+    if (selectedSymptoms.includes(symptom)) return;
+    selectedSymptoms.push(symptom);
+    renderSelectedSymptoms();
 
-        if (selectedSymptoms.includes(symptom)) return;
+    const checkbox = document.querySelector(`input[value="${symptom}"]`);
+    if (checkbox) checkbox.checked = true;
 
-        selectedSymptoms.push(symptom);
+    suggestionBox.innerHTML = "";
+    suggestionBox.style.display = "none";
+    searchInput.value = "";
+}
 
-        const tag = document.createElement("span");
-        tag.className = "symptom-tag";
-        tag.innerText = symptom.replaceAll("_", " ");
+// Render selected symptoms
+function renderSelectedSymptoms() {
+    selectedContainer.innerHTML = "";
 
-        tag.onclick = function () {
-            tag.remove();
+    selectedSymptoms.forEach((symptom, index) => {
+        const span = document.createElement("span");
+        span.className = "symptom-tag";
+        span.textContent = symptom.replaceAll("_"," ");
+        span.onclick = () => {
             selectedSymptoms = selectedSymptoms.filter(s => s !== symptom);
-            document.querySelector(`input[value="${symptom}"]`).checked = false;
+            const checkbox = document.querySelector(`input[value="${symptom}"]`);
+            if (checkbox) checkbox.checked = false;
+            renderSelectedSymptoms();
         };
+        selectedContainer.appendChild(span);
 
-        selectedContainer.appendChild(tag);
-
-        const checkbox = document.querySelector(`input[value="${symptom}"]`);
-        if (checkbox) checkbox.checked = true;
-
-        suggestionBox.innerHTML = "";
-        searchInput.value = "";
-    }
-
-    document.addEventListener("click", function (e) {
-
-        if (!searchInput.contains(e.target) && !suggestionBox.contains(e.target)) {
-            suggestionBox.innerHTML = "";
+        // Add comma except last
+        if (index < selectedSymptoms.length - 1) {
+            const comma = document.createElement("span");
+            comma.textContent = ", ";
+            selectedContainer.appendChild(comma);
         }
-
     });
+}
+
+// Hide suggestion box on click outside
+document.addEventListener("click", function(e) {
+    if (!searchInput.contains(e.target) && !suggestionBox.contains(e.target)) {
+        suggestionBox.innerHTML = "";
+        suggestionBox.style.display = "none";
+    }
+});
+
+// Severity slider
+const slider = document.getElementById("severitySlider");
+const output = document.getElementById("severityValue");
+
+function updateColor(val) {
+    let color;
+    if (val <= 3) color = "green";
+    else if (val <= 6) color = "orange";
+    else color = "red";
+
+    slider.style.background = `linear-gradient(to right, ${color} ${val*10}%, #ddd ${val*10}%)`;
+}
+
+slider.oninput = function() {
+    output.innerText = this.value;
+    updateColor(this.value);
+}
+updateColor(slider.value);
 </script>
 
-<script>
-
-    const slider = document.getElementById("severitySlider");
-    const output = document.getElementById("severityValue");
-
-    function updateColor(val) {
-
-        let color;
-
-        if (val <= 3) {
-            color = "green";
-        }
-        else if (val <= 6) {
-            color = "orange";
-        }
-        else {
-            color = "red";
-        }
-
-        slider.style.background = `linear-gradient(to right, ${color} ${val * 10}%, #ddd ${val * 10}%)`;
-    }
-
-    slider.oninput = function () {
-        output.innerText = this.value;
-        updateColor(this.value);
-    }
-
-    updateColor(slider.value);
-
-</script>
 {% endblock %}
