@@ -4,31 +4,90 @@
 
 {% block content %}
 
-<h1>Search Blood Donor</h1>
+<section class="advisor-hero">
 
-<form action="/donor/search" method="POST">
+    <div class="advisor-container">
 
-    <label>Required Blood Group:</label>
-    <select name="blood_group" required>
-        <option value="A+">A+</option>
-        <option value="A-">A-</option>
-        <option value="B+">B+</option>
-        <option value="B-">B-</option>
-        <option value="O+">O+</option>
-        <option value="O-">O-</option>
-        <option value="AB+">AB+</option>
-        <option value="AB-">AB-</option>
-    </select><br><br>
+        <h1 class="advisor-heading">
+            <span class="green">Blood Donor</span>
+            <span>Search</span>
+        </h1>
 
-    <label>City:</label>
-    <input type="text" name="city" required><br><br>
+        <p class="advisor-sub">
+            Find donors based on blood group and city.
+        </p>
 
-    <button type="submit" class="btn">Search</button>
+        <form action="/donor/search" method="POST" class="advisor-form">
 
-</form>
+            <!-- BLOOD GROUP & CITY -->
+            <div class="form-row">
 
-<hr>
+                <div class="input-box blood-select">
+                    <label>Required Blood Group</label>
+                    <div class="custom-dropdown">
+                        <input type="text" id="bloodInput" placeholder="Select" readonly>
+                        <div class="dropdown-arrow"></div>
+                        <div class="blood-options">
+                            <div data-value="A+">A+</div>
+                            <div data-value="A-">A-</div>
+                            <div data-value="B+">B+</div>
+                            <div data-value="B-">B-</div>
+                            <div data-value="O+">O+</div>
+                            <div data-value="O-">O-</div>
+                            <div data-value="AB+">AB+</div>
+                            <div data-value="AB-">AB-</div>
+                        </div>
+                        <input type="hidden" name="blood_group" id="bloodHidden" required>
+                    </div>
+                </div>
 
-<a href="/donor/register" class="btn">Register as Donor</a>
+                <div class="input-box">
+                    <label>City</label>
+                    <input type="text" name="city" placeholder="Enter city" required>
+                </div>
+
+            </div>
+
+            <!-- BUTTON -->
+            <div class="button-row">
+                <button type="submit" class="btn">
+                    Search Donors
+                </button>
+                <a href="/donor/register" class="btn-secondary">
+                    Register as Donor
+                </a>
+            </div>
+
+        </form>
+
+    </div>
+
+</section>
+
+<script>
+    // Custom dropdown for blood group
+    const bloodInput = document.getElementById("bloodInput");
+    const bloodOptions = document.querySelector(".blood-options");
+    const bloodHidden = document.getElementById("bloodHidden");
+
+    bloodInput.addEventListener("click", () => {
+        bloodOptions.style.display =
+            bloodOptions.style.display === "block" ? "none" : "block";
+    });
+
+    document.querySelectorAll(".blood-options div").forEach(option => {
+        option.addEventListener("click", () => {
+            bloodInput.value = option.textContent;
+            bloodHidden.value = option.dataset.value;
+            bloodOptions.style.display = "none";
+        });
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!e.target.closest(".blood-select")) {
+            bloodOptions.style.display = "none";
+        }
+    });
+</script>
 
 {% endblock %}

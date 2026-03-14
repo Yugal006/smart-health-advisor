@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>About Us - CodeCure</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/globals.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body>
+
+    <div class="main-page">
+
+        <header class="site-header">
+
+            <a href="{{ url_for('home') }}">
+                <img src="{{ url_for('static', filename='images/logos/logo.png') }}" class="logo">
+            </a>
+
+            <nav class="main-nav">
+                <ul class="nav-list">
+
+                    <li><a href="{{ url_for('home') }}">Home</a></li>
+                    <li><a href="{{ url_for('donor_register') }}">Blood Donate</a></li>
+                    <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                    <li><a href="{{ url_for('about_us') }}">About Us</a></li>
+
+                </ul>
+            </nav>
+
+            <a href="{{ url_for('user_profile') }}">
+                <img src="{{ url_for('static', filename='images/logos/user.png') }}" class="user">
+            </a>
+
+        </header>
+
+
+        <section class="about-section">
+
+            <div class="about-card">
+
+                <h1>About Us</h1>
+
+                <p>
+                    CodeCure is committed to providing accessible and reliable healthcare solutions
+                    in one convenient platform. We connect patients with qualified doctors,
+                    offer easy appointment booking, and ensure quick support during emergencies.
+                    Our goal is to make healthcare simple, secure, and stress-free for everyone.
+                </p>
+
+            </div>
+
+
+            <div class="features">
+
+                <div class="feature">
+                    <div class="feature-icon">
+                        <img src="{{ url_for('static', filename='images/logos/emergency.png') }}">
+                    </div>
+                    <p>Emergency Care</p>
+                </div>
+
+                <div class="feature">
+                    <div class="feature-icon">
+                        <img src="{{ url_for('static', filename='images/logos/booking.png') }}">
+                    </div>
+                    <p>Easy Booking</p>
+                </div>
+
+                <div class="feature">
+                    <div class="feature-icon">
+                        <img src="{{ url_for('static', filename='images/logos/certified.png') }}">
+                    </div>
+                    <p>Certified Specialists</p>
+                </div>
+
+            </div>
+
+        </section>
+    </div>
+
+</body>
+
+</html>

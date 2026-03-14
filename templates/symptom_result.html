@@ -3,100 +3,163 @@
 {% block title %}Health Analysis Result{% endblock %}
 
 {% block content %}
+<div class="dashboard-result-page {% if pdf_export %}pdf-mode{% endif %}">
+    <div class="dashboard-wrapper">
 
-<h1>Health Analysis Result</h1>
+        <!-- Sidebar (Hide in PDF) -->
+        {% if not pdf_export %}
+        <header class="patient-sidebar">
+            <div class="logo-area">
+                <span class="green-dot"></span>
+                <h2 class="logo-text">
+                    <span class="health">Health</span><span class="ai">AI</span>
+                </h2>
+            </div>
 
-<!-- Patient Info -->
-<div class="card">
-    <h2>Patient Info</h2>
-    <p><strong>Name:</strong> {{ result.user.name }}</p>
-    <p><strong>Age:</strong> {{ result.user.age }}</p>
+            <div class="patient-card">
+                <div class="avatar">
+                    {% set np = result.user.name.split(' ') %}
+                    {{ np[0][0]|upper|default('Y') }}{% if np|length > 1 %}{{ np[-1][0]|upper|default('Y') }}{% endif %}
+                </div>
+                <div class="details">
+                    <h3>{{ result.user.name }}</h3>
+                    <p>ID: #{{ result.user.id }} • Age: {{ result.user.age }}</p>
+                </div>
+            </div>
+
+            <nav class="action-nav">
+                <button class="nav-btn active">Overview</button>
+                <button class="nav-btn">Medical History</button>
+                <a href="{{ url_for('export_pdf') }}" class="btn-primary">Export as PDF</a>
+            </nav>
+
+            <div class="disclaimer-box">
+                <p>{{ result.disclaimer }}</p>
+            </div>
+        </header>
+        {% endif %}
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <h1>Analysis Report</h1>
+                <span class="timestamp">Generated: {{ timestamp }}</span>
+            </div>
+
+            <div class="report-grid">
+
+                <!-- Most Likely Condition -->
+                <div class="glass-card diagnosis-hero">
+                    <span class="badge">Most Likely Condition</span>
+                    <h2 class="condition-title">
+                        {% if result.analysis.possible_conditions %}
+                        {{ result.analysis.possible_conditions[0]['condition']|title }}
+                        {% else %}
+                        Not identified
+                        {% endif %}
+                    </h2>
+                    <div class="probability-bar">
+                        <div class="fill"
+                            style="width: {% if result.analysis.possible_conditions %}{{ result.analysis.possible_conditions[0]['confidence'] }}{% else %}0{% endif %}%;">
+                        </div>
+                        <span class="perc">
+                            {% if result.analysis.possible_conditions %}
+                            {{ result.analysis.possible_conditions[0]['confidence'] }}%
+                            {% else %}0%
+                            {% endif %} match
+                        </span>
+                    </div>
+                    <p class="summary-text">
+                        {% if result.analysis.possible_conditions and
+                        result.analysis.possible_conditions[0].get('description') %}
+                        {{ result.analysis.possible_conditions[0]['description'] }}
+                        {% endif %}
+                    </p>
+                </div>
+
+                <!-- Risk Assessment -->
+                <div class="glass-card risk-meter-card">
+                    <h3>Risk Assessment</h3>
+                    <div class="meter-container">
+                        <svg viewBox="0 0 100 50">
+                            <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#ddd" stroke-width="8" />
+                            <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#e74c3c" stroke-width="8"
+                                stroke-dasharray="125"
+                                stroke-dashoffset="{{ 125 - (result.risk_assessment.risk_score / 10 * 125) }}"></path>
+                        </svg>
+                        <div class="meter-value">{{ result.risk_assessment.risk_level | title }}</div>
+                    </div>
+                    <p class="risk-sub">Score: {{ result.risk_assessment.risk_score }} / 10</p>
+                </div>
+
+                <!-- Differential Diagnosis -->
+                <div class="glass-card list-card">
+                    <h3>Differential Diagnosis</h3>
+                    <ul class="diagnosis-list">
+                        {% for cond in result.analysis.possible_conditions %}
+                        <li>
+                            <span>{{ cond['condition']|title }}</span>
+                            <span class="dim">{{ cond['confidence'] }}%</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Appointment Advice -->
+                <div class="glass-card appointment-card">
+                    <h3>Next Steps</h3>
+                    <!-- Next Steps / Always Red Banner -->
+                    <div class="urgency-banner urgent">
+                        ⚠ {{ result.appointment.urgency }}: {{ result.appointment.doctor_type }}
+                    </div>
+                    <p class="advice-msg">{{ result.appointment.message }}</p>
+                </div>
+
+                <!-- Recommended Medications / Default Warning -->
+                <div class="glass-card medication-card">
+                    <h3>Recommended Medications</h3>
+                    {% if result.medication.recommended %}
+                    <div class="tags-container">
+                        {% for med in result.medication.recommended %}
+                        <span class="tag">{{ med }}</span>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="no-meds-msg">
+                        {{ result.medication.warnings | join(', ') }}
+                    </p>
+                    {% endif %}
+                </div>
+
+                <!-- Self-Care & Recommendations -->
+                <div class="glass-card wide-card">
+                    <h3>Self-Care & Recommendations</h3>
+                    <div class="tags-container">
+                        {% for advice in result.medication.self_care %}
+                        <span class="tag">{{ advice }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Critical Warnings -->
+                <div class="glass-card warning-card">
+                    <h3>Critical Warnings</h3>
+                    {% for warning in result.medication.warnings %}
+                    <div class="warning-item">{{ warning }}</div>
+                    {% endfor %}
+                </div>
+
+            </div>
+
+            <!-- Bottom Actions (Hide in PDF) -->
+            {% if not pdf_export %}
+            <div class="bottom-actions">
+                <a href="/index" class="btn-primary">New Analysis</a>
+                <a href="/" class="btn-outline">Back to Home</a>
+            </div>
+            {% endif %}
+
+        </main>
+    </div>
 </div>
-
-<!-- Analysis -->
-<div class="card">
-    <h2>Analysis</h2>
-    <p><strong>Most Likely Condition:</strong> {{ result.analysis.top_condition }}</p>
-    <h3>All Possible Conditions:</h3>
-    {% if ranked_conditions %}
-    <ul>
-        {% for cond in ranked_conditions %}
-        <li>{{ cond["condition"].title() }} - {{ cond["confidence"] }}%</li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p>No matching conditions found.</p>
-    {% endif %}
-</div>
-
-<!-- Risk Assessment -->
-<div class="card">
-    <h2>Risk Assessment</h2>
-    <p><strong>Risk Level:</strong> 
-        <span class="risk-{{ result.risk_assessment.risk_level }}">
-            {{ result.risk_assessment.risk_level | title }}
-        </span>
-    </p>
-    <p><strong>Risk Score:</strong> {{ result.risk_assessment.risk_score }}</p>
-</div>
-
-<!-- Recommended Medicines -->
-<div class="card">
-    <h2>Recommended Medicines</h2>
-    {% if result.medication.recommended %}
-    <ul>
-        {% for med in result.medication.recommended %}
-        <li>{{ med }}</li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p>No medicines recommended.</p>
-    {% endif %}
-</div>
-
-<!-- Self-Care Advice -->
-<div class="card">
-    <h2>Self-Care Advice</h2>
-    {% if result.medication.self_care %}
-    <ul>
-        {% for advice in result.medication.self_care %}
-        <li>{{ advice }}</li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p>No specific self-care advice available.</p>
-    {% endif %}
-</div>
-
-<!-- Warnings -->
-<div class="card">
-    <h2>Warnings</h2>
-    {% if result.medication.warnings %}
-    <ul>
-        {% for warning in result.medication.warnings %}
-        <li style="color: red; font-weight: bold;">{{ warning }}</li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p>No warnings.</p>
-    {% endif %}
-</div>
-
-<!-- Appointment Advice -->
-<div class="card">
-    <h2>Appointment Advice</h2>
-    <p><strong>Doctor Type:</strong> {{ result.appointment.doctor_type }}</p>
-    <p><strong>Urgency:</strong> {{ result.appointment.urgency }}</p>
-    <p>{{ result.appointment.message }}</p>
-</div>
-
-<!-- Disclaimer -->
-<div class="card">
-    <h3>Disclaimer</h3>
-    <p>{{ result.disclaimer }}</p>
-</div>
-
-<br>
-<a href="/" class="btn">Analyze Again</a>
-
 {% endblock %}

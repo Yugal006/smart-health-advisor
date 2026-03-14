@@ -4,57 +4,63 @@
 
 {% block content %}
 
-<h1>Blood Donor System</h1>
+<section class="advisor-hero">
 
-{% if search %}
+    <div class="advisor-container">
 
-<h2>Search Results</h2>
+        <h1 class="advisor-heading">
+            <span class="green">Blood Donor</span>
+            <span>Results</span>
+        </h1>
 
-{% if donors and donors|length > 0 %}
-<ul>
-    {% for donor in donors %}
-    <li>
-        <strong>{{ donor[0] }}</strong> |
-        Age: {{ donor[1] }} |
-        Blood Group: <b>{{ donor[2] }}</b> |
-        City: {{ donor[3] }} |
-        Phone: {{ donor[4] }} |
-        Last Donation: {{ donor[5] }}
+        {% if search %}
 
-        {% if donor[2] == requested_group %}
-        <br>
-        <span style="color:blue;">
-            ✔ Exact blood group match
-        </span>
+        <h2 class="advisor-sub">Search Results</h2>
+
+        {% if donors and donors|length > 0 %}
+        <div class="donor-list">
+            {% for donor in donors %}
+            <div class="donor-card">
+                <h3>{{ donor[0] }}</h3>
+                <p>
+                    Age: {{ donor[1] }}<br>
+                    Blood Group: <b>{{ donor[2] }}</b><br>
+                    City: {{ donor[3] }}<br>
+                    Phone: {{ donor[4] }}<br>
+                    Last Donation: {{ donor[5] }}
+                </p>
+                {% if donor[2] == requested_group %}
+                <p class="match exact">✔ Exact blood group match</p>
+                {% else %}
+                <p class="match compatible">
+                    ✔ Compatible donor – this blood group can safely donate to {{ requested_group }}
+                </p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
         {% else %}
-        <br>
-        <span style="color:green;">
-            ✔ Compatible donor – this blood group can safely donate to {{ requested_group }}
-        </span>
+        <p class="advisor-sub">No donors found for selected criteria.</p>
         {% endif %}
 
-    </li>
-    <br>
-    {% endfor %}
-</ul>
-{% else %}
-<p>No donors found for selected criteria.</p>
-{% endif %}
+        {% else %}
 
-{% else %}
+        {% if success %}
+        <h2 class="advisor-sub" style="color:green;">{{ message }}</h2>
+        {% else %}
+        <h2 class="advisor-sub" style="color:red;">{{ message }}</h2>
+        {% endif %}
 
-{% if success %}
-<h2 style="color:green;">{{ message }}</h2>
-{% else %}
-<h2 style="color:red;">{{ message }}</h2>
-{% endif %}
+        {% endif %}
 
-{% endif %}
+        <div class="button-row" style="margin-top:20px;">
+            <a href="/" class="btn">Back to Home</a>
+            <a href="/donor/search" class="btn-secondary">Search Donor</a>
+            <a href="/donor/register" class="btn-secondary">Register Donor</a>
+        </div>
 
-<hr>
+    </div>
 
-<a href="/" class="btn">Back to Home</a>
-<a href="/donor/search" class="btn">Search Again</a>
-<a href="/donor/register" class="btn">Register Donor</a>
+</section>
 
 {% endblock %}

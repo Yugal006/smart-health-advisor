@@ -1,7 +1,11 @@
 # app.py
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session, Response
 import joblib
+from datetime import datetime
+import io
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 
 # -----------------------------
 # BACKEND MODULES
@@ -20,16 +24,13 @@ from backend.risk_engine import evaluate_risk
 from backend.medicine_engine import suggest_medicines
 from backend.appointment_engine import recommend_appointment
 from backend.formatter import format_final_response
-
-# -----------------------------
-# SYMPTOM ANALYZER (ML-DRIVEN)
-# -----------------------------
 from backend.symptom_analyzer import analyze_symptoms
 
 # -----------------------------
 # FLASK INIT
 # -----------------------------
 app = Flask(__name__)
+app.secret_key = "Yugal"
 
 # -----------------------------
 # INIT BLOOD DONOR DB
@@ -40,15 +41,31 @@ init_db()
 # LOAD SYMPTOM LIST FOR FRONTEND
 # -----------------------------
 FEATURE_PATH = "ml/symptom_columns.pkl"
-symptom_columns = joblib.load(FEATURE_PATH)  # matches trained model
+symptom_columns = joblib.load(FEATURE_PATH)
 ALL_SYMPTOMS = symptom_columns
 
 # -----------------------------
-# HOME PAGE
+# HOME & INFO PAGES
 # -----------------------------
 @app.route("/")
+def home():
+    return render_template("home.html")
+
+@app.route("/index")
 def index():
     return render_template("index.html", symptoms=ALL_SYMPTOMS)
+
+@app.route("/profile")
+def user_profile():
+    return render_template("profile.html")
+
+@app.route("/contact")
+def contact():
+    return render_template("contact.html")
+
+@app.route("/about")
+def about_us():
+    return render_template("about.html")
 
 # -----------------------------
 # SYMPTOM ANALYSIS
@@ -56,24 +73,15 @@ def index():
 @app.route("/analyze", methods=["POST"])
 def analyze():
     try:
-        # 1️⃣ Validate Input
         user_data = validate_user_input(request.form)
-
-        # 2️⃣ ML-based Disease Prediction
         ranked_conditions = analyze_symptoms(user_data)
         if ranked_conditions:
             user_data["predicted_condition"] = ranked_conditions[0]["condition"]
-            
-        # 3️⃣ Risk Evaluation
+
         risk_data = evaluate_risk(user_data)
-
-        # 4️⃣ Medicine Suggestions
         medicine_data = suggest_medicines(ranked_conditions, user_data, risk_data)
-
-        # 5️⃣ Doctor Recommendation
         appointment_data = recommend_appointment(ranked_conditions, risk_data, user_data)
 
-        # 6️⃣ Combine Everything
         final_result = format_final_response(
             user_data,
             ranked_conditions,
@@ -82,18 +90,102 @@ def analyze():
             appointment_data
         )
 
+        session['final_result'] = final_result
+
         return render_template(
             "symptom_result.html",
             result=final_result,
-            ranked_conditions=ranked_conditions
+            ranked_conditions=ranked_conditions,
+            timestamp=datetime.now().strftime("%B %d, %Y")
         )
 
     except ValidationError as e:
         return render_template("error.html", message=str(e))
-
     except Exception as e:
         print("Unexpected Error:", e)
         return render_template("error.html", message="Unexpected error occurred. Please try again.")
+
+# -----------------------------
+# PDF EXPORT (ReportLab)
+# -----------------------------
+@app.route("/export/pdf")
+def export_pdf():
+    final_result = session.get('final_result')
+    if not final_result:
+        return render_template("error.html", message="No result to export")
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer)
+    styles = getSampleStyleSheet()
+    elements = []
+
+    # Title
+    elements.append(Paragraph("Health Analysis Report", styles['Title']))
+    elements.append(Spacer(1, 12))
+
+    # User Info
+    user = final_result['user']
+    elements.append(Paragraph(f"Name: {user['name']}", styles['Normal']))
+    elements.append(Paragraph(f"Age: {user['age']}", styles['Normal']))
+    elements.append(Paragraph(f"ID: {user.get('id', 'N/A')}", styles['Normal']))
+    elements.append(Spacer(1, 12))
+
+    # Most Likely Condition
+    elements.append(Paragraph("Most Likely Condition:", styles['Heading2']))
+    cond = final_result['analysis']['possible_conditions'][0] if final_result['analysis']['possible_conditions'] else None
+    if cond:
+        elements.append(Paragraph(f"{cond['condition']} ({cond['confidence']}%)", styles['Normal']))
+        if cond.get('description'):
+            elements.append(Paragraph(f"Description: {cond['description']}", styles['Normal']))
+    else:
+        elements.append(Paragraph("Not identified", styles['Normal']))
+
+    elements.append(Spacer(1, 12))
+
+    # Risk Assessment
+    ra = final_result['risk_assessment']
+    elements.append(Paragraph("Risk Assessment:", styles['Heading2']))
+    elements.append(Paragraph(f"Level: {ra['risk_level'].title()}", styles['Normal']))
+    elements.append(Paragraph(f"Score: {ra['risk_score']} / 10", styles['Normal']))
+    elements.append(Spacer(1, 12))
+
+    # Appointment Advice
+    appt = final_result['appointment']
+    elements.append(Paragraph("Next Steps:", styles['Heading2']))
+    elements.append(Paragraph(f"{appt['urgency']}: {appt['doctor_type']}", styles['Normal']))
+    elements.append(Paragraph(f"Advice: {appt['message']}", styles['Normal']))
+    elements.append(Spacer(1, 12))
+
+    # Medications
+    meds = final_result['medication']
+    if meds.get('recommended'):
+        elements.append(Paragraph("Recommended Medications:", styles['Heading2']))
+        for med in meds['recommended']:
+            elements.append(Paragraph(f"- {med}", styles['Normal']))
+        elements.append(Spacer(1, 12))
+
+    # Self-care
+    if meds.get('self_care'):
+        elements.append(Paragraph("Self-Care & Recommendations:", styles['Heading2']))
+        for advice in meds['self_care']:
+            elements.append(Paragraph(f"- {advice}", styles['Normal']))
+        elements.append(Spacer(1, 12))
+
+    # Warnings
+    if meds.get('warnings'):
+        elements.append(Paragraph("Critical Warnings:", styles['Heading2']))
+        for warning in meds['warnings']:
+            elements.append(Paragraph(f"- {warning}", styles['Normal']))
+        elements.append(Spacer(1, 12))
+
+    # Timestamp
+    elements.append(Paragraph(f"Generated: {datetime.now().strftime('%B %d, %Y')}", styles['Normal']))
+
+    doc.build(elements)
+    buffer.seek(0)
+
+    return Response(buffer, mimetype='application/pdf',
+                    headers={'Content-Disposition': 'attachment;filename=health_analysis.pdf'})
 
 # -----------------------------
 # ADMIN BLOOD DONOR PANEL
