@@ -148,9 +148,18 @@
                     <div class="warning-item">{{ warning }}</div>
                     {% endfor %}
                 </div>
+                <!-- Nearby Doctors Map -->
+                <div class="glass-card wide-card">
+                    <h3>Nearby Hospitals & Clinics</h3>
+
+                    <div id="doctorMap"></div>
+
+                    <p style="margin-top:10px;font-size:14px;color:#555;">
+                        Showing nearby {{ result.appointment.doctor_type }} based on your location.
+                    </p>
+                </div>
 
             </div>
-
             <!-- Bottom Actions (Hide in PDF) -->
             {% if not pdf_export %}
             <div class="bottom-actions">
@@ -162,4 +171,92 @@
         </main>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const doctors = {{ result.appointment.nearby_doctors | tojson
+    }};
+    const city = "{{ result.user.search_location }}";
+
+    console.log("Doctors from backend:", doctors);
+
+    // ICONS
+    const hospitalIcon = L.divIcon({ html: '<div>🏥</div>', className: 'map-icon', iconSize: [30, 30] });
+    const clinicIcon = L.divIcon({ html: '<div>👨‍⚕️</div>', className: 'map-icon', iconSize: [30, 30] });
+    const pharmacyIcon = L.divIcon({ html: '<div>💊</div>', className: 'map-icon', iconSize: [30, 30] });
+    const userIcon = L.divIcon({ html: '<div>📍</div>', className: 'map-icon', iconSize: [30, 30] });
+
+    // Try GPS first
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+            initMap(position.coords.latitude, position.coords.longitude);
+        }, fallbackToCity);
+    } else {
+        fallbackToCity();
+    }
+
+    function fallbackToCity() {
+        if (!city || city.trim() === "") {
+            alert("Location not provided.");
+            return;
+        }
+
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data || data.length === 0) {
+                    alert("Could not find the entered city.");
+                    return;
+                }
+                initMap(parseFloat(data[0].lat), parseFloat(data[0].lon));
+            })
+            .catch(err => console.error("Geocode error:", err));
+    }
+
+    function initMap(lat, lon) {
+        const map = L.map('doctorMap').setView([lat, lon], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Fix rendering issue
+        setTimeout(() => map.invalidateSize(), 500);
+
+        // User location marker
+        L.marker([lat, lon], { icon: userIcon })
+            .addTo(map)
+            .bindPopup("<b>Your Location</b>")
+            .openPopup();
+
+        // Doctor markers
+        if (doctors && doctors.length > 0) {
+            doctors.forEach(doc => {
+                if (doc.lat != null && doc.lon != null) {
+
+                    let icon = hospitalIcon;
+                    if (doc.type === "clinic" || doc.type === "doctor") icon = clinicIcon;
+                    if (doc.type === "pharmacy") icon = pharmacyIcon;
+
+                    const popupHtml = `
+                        <b>${doc.name}</b><br>
+                        Type: ${doc.type || "Medical"}<br>
+                        Distance: ${doc.distance || "N/A"} km<br>
+                        <a href="https://www.google.com/maps/search/?api=1&query=${doc.lat},${doc.lon}" target="_blank">Directions</a>
+                    `;
+                        // Address: ${doc.address || "N/A"}<br>
+
+                    L.marker([doc.lat, doc.lon], { icon: icon })
+                        .addTo(map)
+                        .bindPopup(popupHtml);
+                }
+            });
+        } else {
+            console.warn("No doctors received from backend.");
+        }
+    }
+});
+</script>
+
 {% endblock %}

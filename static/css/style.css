@@ -173,7 +173,7 @@ body {
 .cta-btn:hover {
     color: white;
     transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(78,150,145,0.4);
+    box-shadow: 0 10px 25px rgba(78, 150, 145, 0.4);
 }
 
 /* Animated background */
@@ -182,8 +182,8 @@ body {
     position: absolute;
     inset: 0;
     background: linear-gradient(120deg,
-        var(--primary-teal),
-        var(--secondary-teal));
+            var(--primary-teal),
+            var(--secondary-teal));
     transform: translateX(-100%);
     transition: transform 0.35s ease;
     z-index: -1;
@@ -192,9 +192,11 @@ body {
 .cta-btn:hover::before {
     transform: translateX(0);
 }
+
 .cta-btn:active {
     transform: scale(0.96);
 }
+
 /* =========================
    ABOUT SECTION
 ========================= */
@@ -890,13 +892,17 @@ input[type="number"] {
     font-weight: bold;
     text-transform: uppercase;
 }
+
 .condition-title {
-    font-size: clamp(20px, 2vw, 38px); /* responsive font */
+    font-size: clamp(20px, 2vw, 38px);
+    /* responsive font */
     margin: 15px 0;
     color: var(--primary-teal);
-    word-wrap: break-word; /* wrap long words */
+    word-wrap: break-word;
+    /* wrap long words */
     overflow-wrap: break-word;
-    max-width: 100%; /* prevent overflow */
+    max-width: 100%;
+    /* prevent overflow */
     line-height: 1.2em;
 }
 
@@ -908,7 +914,8 @@ input[type="number"] {
     border-radius: 10px;
     margin-bottom: 20px;
     width: 100%;
-    max-width: 100%; /* ensure full container width */
+    max-width: 100%;
+    /* ensure full container width */
 }
 
 .probability-bar .fill {
@@ -945,10 +952,12 @@ input[type="number"] {
 .meter-value {
     font-weight: bold;
     color: var(--danger-red);
-    font-size: clamp(14px, 1.5vw, 22px); /* auto scales for screen size */
+    font-size: clamp(14px, 1.5vw, 22px);
+    /* auto scales for screen size */
     text-align: center;
     margin-top: 10px;
-    word-break: break-word; /* wrap emergency/immediate text */
+    word-break: break-word;
+    /* wrap emergency/immediate text */
 }
 
 .meter-value {
@@ -1204,7 +1213,7 @@ input[type="number"] {
     /* or max-width: 1200px; */
     max-width: 1200px;
     display: flex;
-    height: 85vh;
+    min-height: 85vh;
     /* leave some room if base header exists */
     overflow: hidden;
     border-radius: 30px;
@@ -1319,6 +1328,20 @@ input[type="number"] {
 }
 
 
+#doctorMap {
+    height: 400px;
+    width: 100%;
+    border-radius: 12px;
+    margin-top: 10px;
+}
+
+.map-icon {
+    font-size: 24px;       /* emoji size */
+    text-align: center;
+    line-height: 24px;     /* align vertically */
+}
+
+
 
 
 
@@ -1369,7 +1392,8 @@ input[type="number"] {
         grid-column: span 1;
     }
 
-    .risk-meter-card, .diagnosis-hero {
+    .risk-meter-card,
+    .diagnosis-hero {
         font-size: clamp(14px, 2vw, 18px);
     }
 
@@ -1431,7 +1455,8 @@ input[type="number"] {
         height: 70px;
     }
 
-    .risk-meter-card, .diagnosis-hero {
+    .risk-meter-card,
+    .diagnosis-hero {
         font-size: clamp(14px, 4vw, 20px);
     }
 
@@ -1464,4 +1489,3 @@ input[type="number"] {
         box-shadow: none !important;
     }
 }
-
