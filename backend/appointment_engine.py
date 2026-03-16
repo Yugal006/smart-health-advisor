@@ -72,6 +72,7 @@ CONDITION_DOCTOR_MAP = {
     # ENT
     "sinusitis": "ENT Specialist",
     "ear infection": "ENT Specialist",
+    "laryngitis": "ENT Specialist",
 
     # Eye
     "conjunctivitis": "Ophthalmologist"

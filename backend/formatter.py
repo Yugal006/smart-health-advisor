@@ -21,7 +21,9 @@ def format_final_response(
 
         "user": {
             "name": user_data.get("name", "User"),
-            "age": user_data.get("age", "N/A")
+            "age": user_data.get("age", "N/A"),
+            "city": user_data.get("city", ""),
+            "search_location": user_data.get("search_location", "")
         },
 
         "analysis": {
@@ -41,7 +43,12 @@ def format_final_response(
             "warnings": medicine_data.get("warnings", [])
         },
 
-        "appointment": appointment_data,
+        "appointment": {
+        "doctor_type": appointment_data.get("doctor_type"),
+        "urgency": appointment_data.get("urgency"),
+        "message": appointment_data.get("message"),
+        "nearby_doctors": appointment_data.get("nearby_doctors", [])
+        },
 
         "disclaimer": (
             "This AI system provides health suggestions for educational "

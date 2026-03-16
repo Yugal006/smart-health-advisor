@@ -1,25 +1,19 @@
-# backend/validator.py
-
 class ValidationError(Exception):
     """Custom exception for validation errors."""
     pass
 
 
 def validate_user_input(form_data):
-    """
-    Validates and cleans structured form input.
-    Returns cleaned dictionary if valid.
-    Raises ValidationError if invalid.
-    """
 
     try:
-        # Required Fields
         name = form_data.get("name", "").strip()
         age = int(form_data.get("age", 0))
         weight = float(form_data.get("weight", 0))
         severity = int(form_data.get("severity", 0))
 
-        # Multi-select symptoms
+        city = form_data.get("city", "").strip()
+        area = form_data.get("area", "").strip()
+
         symptoms = form_data.getlist("symptoms")
 
     except Exception:
@@ -41,11 +35,17 @@ def validate_user_input(form_data):
     if severity < 1 or severity > 10:
         raise ValidationError("Severity must be between 1 and 10.")
 
-    if not symptoms:
-        raise ValidationError("At least one symptom must be selected.")
+    if not symptoms or len(symptoms) < 3:
+        raise ValidationError("At least 3 symptoms must be selected.")
+
+    if not city:
+        raise ValidationError("City is required.")
+
+    if not area:
+        raise ValidationError("Area / Sector is required.")
 
     # -------------------------
-    # Normalize Data
+    # Cleaned Data
     # -------------------------
 
     cleaned_data = {
@@ -53,6 +53,8 @@ def validate_user_input(form_data):
         "age": age,
         "weight": weight,
         "severity": severity,
+        "city": city,
+        "area": area,
         "symptoms": [s.strip().lower() for s in symptoms]
     }
 

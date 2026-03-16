@@ -1,4 +1,4 @@
-#ml/train_model.py
+# ml/train_model.py
 
 import pandas as pd
 import joblib
@@ -18,6 +18,9 @@ DATASET_2 = "data/expanded_symptoms.csv"
 
 MODEL_PATH = "ml/disease_model.pkl"
 FEATURE_PATH = "ml/symptom_columns.pkl"
+
+# Compression level for joblib (1–9)
+COMPRESSION_LEVEL = 3  # can increase to 6 or 9 for smaller files
 
 
 # =====================================================
@@ -39,7 +42,6 @@ print("Dataset 2 shape:", df2.shape)
 
 print("\nAligning symptom columns...")
 
-# normalize disease column
 df1.rename(columns={df1.columns[0]: "disease"}, inplace=True)
 df2.rename(columns={df2.columns[0]: "disease"}, inplace=True)
 
@@ -54,6 +56,7 @@ ordered_columns = ["disease"] + sorted(all_symptoms)
 
 df1 = df1.reindex(columns=ordered_columns, fill_value=0)
 df2 = df2.reindex(columns=ordered_columns, fill_value=0)
+
 
 # =====================================================
 # 4. MERGE DATASETS
@@ -73,9 +76,7 @@ print("Merged dataset shape:", df.shape)
 print("\nRemoving rare diseases...")
 
 disease_counts = df["disease"].value_counts()
-
 valid_diseases = disease_counts[disease_counts > 1].index
-
 df = df[df["disease"].isin(valid_diseases)]
 
 print("Dataset after filtering:", df.shape)
@@ -87,7 +88,6 @@ print("Dataset after filtering:", df.shape)
 
 y = df["disease"]
 X = df.drop("disease", axis=1)
-
 X = X.astype("int8")
 
 symptom_columns = X.columns.tolist()
@@ -139,28 +139,25 @@ print("Model training completed")
 print("\nEvaluating model...")
 
 y_pred = model.predict(X_test)
-
 accuracy = accuracy_score(y_test, y_pred)
 
 print("\nModel Accuracy:", round(accuracy * 100, 2), "%")
-
 print("\nClassification Report:\n")
 print(classification_report(y_test, y_pred))
 
 
 # =====================================================
-# 10. SAVE MODEL
+# 10. SAVE MODEL (COMPRESSED)
 # =====================================================
 
-print("\nSaving model...")
+print("\nSaving model with compression...")
 
 os.makedirs("ml", exist_ok=True)
 
-joblib.dump(model, MODEL_PATH)
-joblib.dump(symptom_columns, FEATURE_PATH)
+joblib.dump(model, MODEL_PATH, compress=COMPRESSION_LEVEL)
+joblib.dump(symptom_columns, FEATURE_PATH, compress=COMPRESSION_LEVEL)
 
 print("Model saved to:", MODEL_PATH)
 print("Symptom columns saved to:", FEATURE_PATH)
-
 
 print("\nTraining pipeline completed successfully 🚀")
