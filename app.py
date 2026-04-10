@@ -23,6 +23,7 @@ init_user_db()
 # -----------------------------
 # BACKEND MODULES
 # -----------------------------
+from flask import Flask, render_template, request
 from backend.blood_donor_engine import (
     init_db,
     register_donor,
