@@ -14,6 +14,7 @@ from backend.user_engine import update_user_details, update_password
 from backend.user_engine import get_all_users, delete_user_by_admin
 from backend.user_engine import make_admin
 import re
+import os
 
 # Initialize user DB
 init_user_db()
@@ -546,4 +547,5 @@ def donor_search():
 # RUN APP
 # -----------------------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
