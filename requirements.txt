@@ -165,3 +165,4 @@ Werkzeug==3.1.6
 xhtml2pdf==0.2.17
 xyzservices==2025.11.0
 zopfli==0.4.1
+gunicorn
