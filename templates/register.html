@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, msg in messages %}
+            <div class="alert {{ category }}">
+                {{ msg }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+<section class="advisor-hero">
+    <div class="advisor-container">
+
+        <h1 class="advisor-heading">
+            <span class="green">Create</span>
+            <span>Your Account</span>
+        </h1>
+
+        <p class="advisor-sub">
+            Join us to get personalized health insights and smarter care.
+        </p>
+
+        {% if message %}
+            <p style="color: green; font-weight: bold;">{{ message }}</p>
+        {% endif %}
+
+        {% if error %}
+            <p style="color: red; font-weight: bold;">{{ error }}</p>
+        {% endif %}
+
+        <form action="/register" method="POST" class="advisor-form">
+
+            <!-- Name -->
+            <div class="form-row">
+                <div class="input-box">
+                    <label>Name</label>
+                    <input type="text" name="name" required>
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="form-row">
+                <div class="input-box">
+                    <label>Email</label>
+                    <input type="email" name="email" required>
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-row">
+                <div class="input-box">
+                    <label>Password</label>
+                    <input type="password" name="password" required>
+                </div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="form-row">
+                <div class="input-box">
+                    <label>Confirm</label>
+                    <input type="password" name="confirm_password" required>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="button-row">
+                <button type="submit" class="btn">Register</button>
+                <a href="/login" class="btn-secondary">Login</a>
+            </div>
+
+        </form>
+
+    </div>
+</section>
+
+{% endblock %}

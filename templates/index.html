@@ -1,52 +1,330 @@
 {% extends "base.html" %}
 
-{% block title %}Home - Smart Health Advisor{% endblock %}
+{% block title %}Smart Health Advisor{% endblock %}
 
 {% block content %}
 
-<h1>Smart Health Advisor</h1>
+<section class="advisor-hero">
 
-<form action="/analyze" method="POST">
+    <div class="advisor-container">
 
-    <label>Name:</label>
-    <input type="text" name="name" required><br><br>
+        <h1 class="advisor-heading">
+            <span class="green">Smart Health</span>
+            <span>Symptom Analyzer</span>
+        </h1>
 
-    <label>Age:</label>
-    <input type="number" name="age" required><br><br>
+        <p class="advisor-sub">
+            Enter your health details and symptoms to receive intelligent health insights.
+        </p>
 
-    <label>Gender:</label>
-    <select name="gender" required>
-        <option value="male">Male</option>
-        <option value="female">Female</option>
-    </select><br><br>
+        <form action="/analyze" method="POST" class="advisor-form">
 
-    <label>Weight (kg):</label>
-    <input type="number" name="weight" required><br><br>
+            <!-- ROW 1 -->
+            <div class="form-row">
 
-    <label>Select Symptoms:</label><br>
-    <select name="symptoms" multiple size="8" required>
-        <option value="fever">Fever</option>
-        <option value="headache">Headache</option>
-        <option value="cough">Cough</option>
-        <option value="sore throat">Sore Throat</option>
-        <option value="fatigue">Fatigue</option>
-        <option value="chest pain">Chest Pain</option>
-        <option value="shortness of breath">Shortness of Breath</option>
-        <option value="nausea">Nausea</option>
-        <option value="vomiting">Vomiting</option>
-        <option value="dizziness">Dizziness</option>
-    </select>
+                <div class="input-box">
+                    <label>Name</label>
+                    <input type="text" name="name" value="{{ user.name if user else '' }}" required>
+                </div>
 
-    <p>Hold CTRL (Windows) or CMD (Mac) to select multiple.</p>
+                <div class="input-box">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ user.email if user else '' }}" required>
+                </div>
 
-    <label>Symptom Severity (1–10):</label><br>
-    <input type="range" name="severity" min="1" max="10" value="5" oninput="this.nextElementSibling.value = this.value">
-    <output>5</output><br><br>
-    <hr>
-    <button type="submit" class="btn">Analyze</button>
-    <br><br>
-    <a href="/donor/register" class="btn">Blood Donor System</a>
+            </div>
 
-</form>
+
+            <!-- ROW 2 -->
+            <div class="form-row">
+
+                <div class="input-box">
+                    <label>Age</label>
+                    <input type="number" name="age" required>
+                </div>
+
+                <div class="input-box">
+                    <label>Weight (kg)</label>
+                    <input type="number" name="weight" required>
+                </div>
+
+                <div class="input-box gender-select">
+
+                    <label>Gender</label>
+
+                    <div class="custom-dropdown">
+
+                        <input type="text" id="genderInput" placeholder="Select" readonly>
+
+                        <div class="dropdown-arrow"></div>
+
+                        <div class="gender-options">
+
+                            <div data-value="male">Male</div>
+                            <div data-value="female">Female</div>
+                            <div data-value="non_binary">Non-binary</div>
+                            <div data-value="transgender">Transgender</div>
+                            <div data-value="gender_fluid">Gender Fluid</div>
+                            <div data-value="agender">Agender</div>
+                            <div data-value="prefer_not_to_say">Prefer not to say</div>
+
+                        </div>
+
+                        <input type="hidden" name="gender" id="genderHidden" required>
+
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- SYMPTOM SEARCH -->
+            <div class="select-field">
+
+                <div class="custom-select">
+
+                    <input type="text" id="symptomSearch" placeholder="Search symptoms" autocomplete="off">
+
+                    <div class="triangle"></div>
+
+                    <div id="suggestionBox" class="suggestion-box"></div>
+
+                </div>
+
+            </div>
+
+
+            <!-- SELECTED SYMPTOMS -->
+            <div class="symptom-section">
+
+                <h4>Selected Symptoms</h4>
+
+                <div id="selectedSymptoms"></div>
+
+            </div>
+
+
+            <!-- HIDDEN CHECKBOXES -->
+            <div id="checkboxContainer" style="display:none;">
+                {% for symptom in symptoms %}
+                <input type="checkbox" name="symptoms" value="{{ symptom }}">
+                {% endfor %}
+            </div>
+
+
+            <!-- SEVERITY -->
+            <div class="severity-section">
+
+                <div class="severity-label">Symptom Severity</div>
+
+                <div class="slider-wrapper">
+
+                    <div id="bubble" class="bubble">5</div>
+
+                    <input type="range" min="1" max="10" value="5" id="severitySlider" name="severity">
+
+                </div>
+
+            </div>
+            <div class="form-row">
+                <!-- <div class="severity-label">Enter Location</div> -->
+                <div class="input-box">
+                    <label>City</label>
+                    <input type="text" name="city" placeholder="Example: Panvel" required>
+                </div>
+
+                <div class="input-box">
+                    <label>Area / Sector</label>
+                    <input type="text" name="area" placeholder="Example: Sector 2 or New Panvel East" required>
+                </div>
+
+            </div>
+
+            <!-- BUTTONS -->
+            <div class="button-row">
+
+                <button type="submit" class="btn">
+                    Analyze
+                </button>
+
+                <a href="/donor/register" class="btn-secondary">
+                    Blood Donor System
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</section>
+
+
+
+<script>
+
+    const allSymptoms = [
+        {% for symptom in symptoms %}
+    "{{ symptom }}",
+        {% endfor %}
+    ];
+
+    const searchInput = document.getElementById("symptomSearch");
+    const suggestionBox = document.getElementById("suggestionBox");
+    const selectedContainer = document.getElementById("selectedSymptoms");
+
+    let selectedSymptoms = [];
+
+    searchInput.addEventListener("input", function () {
+
+        const query = this.value.toLowerCase();
+
+        suggestionBox.innerHTML = "";
+        suggestionBox.style.display = "none";
+
+        if (!query) return;
+
+        const matches = allSymptoms
+            .filter(s => s.toLowerCase().startsWith(query))
+            .concat(allSymptoms.filter(s => s.toLowerCase().includes(query) && !s.toLowerCase().startsWith(query)))
+            .slice(0, 10);
+
+        if (matches.length > 0) suggestionBox.style.display = "block";
+
+        matches.forEach(symptom => {
+
+            const div = document.createElement("div");
+            div.className = "suggestion-item";
+            div.textContent = symptom.replaceAll("_", " ");
+            div.onclick = () => addSymptom(symptom);
+
+            suggestionBox.appendChild(div);
+
+        });
+
+    });
+
+
+    function addSymptom(symptom) {
+
+        if (selectedSymptoms.includes(symptom)) return;
+
+        selectedSymptoms.push(symptom);
+
+        renderSelectedSymptoms();
+
+        const checkbox = document.querySelector(`input[value="${symptom}"]`);
+        if (checkbox) checkbox.checked = true;
+
+        suggestionBox.innerHTML = "";
+        suggestionBox.style.display = "none";
+
+        searchInput.value = "";
+
+    }
+
+
+    function renderSelectedSymptoms() {
+
+        selectedContainer.innerHTML = "";
+
+        selectedSymptoms.forEach(symptom => {
+
+            const span = document.createElement("span");
+
+            span.className = "symptom-tag";
+
+            span.textContent = symptom.replaceAll("_", " ");
+
+            span.onclick = () => {
+
+                selectedSymptoms = selectedSymptoms.filter(s => s !== symptom);
+
+                const checkbox = document.querySelector(`input[value="${symptom}"]`);
+                if (checkbox) checkbox.checked = false;
+
+                renderSelectedSymptoms();
+
+            };
+
+            selectedContainer.appendChild(span);
+
+        });
+
+    }
+
+
+    document.addEventListener("click", function (e) {
+
+        if (!searchInput.contains(e.target) && !suggestionBox.contains(e.target)) {
+
+            suggestionBox.innerHTML = "";
+            suggestionBox.style.display = "none";
+
+        }
+
+    });
+
+
+    const slider = document.getElementById("severitySlider");
+    const bubble = document.getElementById("bubble");
+
+    function updateSlider() {
+
+        const val = slider.value;
+        const min = slider.min ? slider.min : 0;
+        const max = slider.max ? slider.max : 10;
+
+        const percent = ((val - min) * 100) / (max - min);
+
+        bubble.innerText = val;
+
+        bubble.style.left = `calc(${percent}% + (${20 - percent * 0.4}px))`;
+
+        slider.style.background =
+            `linear-gradient(to right,#4b8673 ${percent}%,#cbdcd5 ${percent}%)`;
+
+    }
+
+    slider.addEventListener("input", updateSlider);
+
+    updateSlider();
+
+
+
+    const genderInput = document.getElementById("genderInput");
+    const genderOptions = document.querySelector(".gender-options");
+    const genderHidden = document.getElementById("genderHidden");
+
+    genderInput.addEventListener("click", () => {
+
+        genderOptions.style.display =
+            genderOptions.style.display === "block" ? "none" : "block";
+
+    });
+
+    document.querySelectorAll(".gender-options div").forEach(option => {
+
+        option.addEventListener("click", () => {
+
+            genderInput.value = option.textContent;
+
+            genderHidden.value = option.dataset.value;
+
+            genderOptions.style.display = "none";
+
+        });
+
+    });
+
+    document.addEventListener("click", (e) => {
+
+        if (!e.target.closest(".custom-dropdown")) {
+            genderOptions.style.display = "none";
+        }
+
+    });
+
+</script>
 
 {% endblock %}

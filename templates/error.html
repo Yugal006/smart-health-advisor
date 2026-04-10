@@ -1,14 +1,126 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>Error</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - CodeCure</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/globals.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Center container */
+        .error-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .error-card {
+            background: rgba(241, 247, 245, 0.65);
+            backdrop-filter: blur(12px);
+            padding: 40px 50px;
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            max-width: 500px;
+            width: 90%;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .error-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
+        }
+
+        .error-card h2 {
+            font-size: 48px;
+            color: var(--danger-red);
+            margin-bottom: 15px;
+        }
+
+        .error-card p {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        /* Buttons */
+        .error-card .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            border-radius: 30px;
+            font-weight: bold;
+            margin: 0 10px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        /* Go Back Button */
+        .btn-back {
+            background: var(--primary-teal);
+            color: white;
+            border: none;
+        }
+
+        .btn-back:hover {
+            background: var(--secondary-teal);
+        }
+
+        /* Home Button - empty, filled on hover */
+        .btn-home {
+            background: transparent;
+            color: var(--primary-teal);
+            border: 2px solid var(--primary-teal);
+        }
+
+        .btn-home:hover {
+            background: var(--primary-teal);
+            color: white;
+        }
+
+        /* Optional icon */
+        .error-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            color: var(--danger-red);
+        }
+
+        @media(max-width: 768px) {
+            .error-card h2 {
+                font-size: 36px;
+            }
+
+            .error-card p {
+                font-size: 16px;
+            }
+
+            .error-card {
+                padding: 30px 25px;
+            }
+        }
+    </style>
 </head>
+
 <body>
 
-<h2>Error</h2>
-<p>{{ message }}</p>
+    <div class="error-page">
+        <div class="error-card">
+            <div class="error-icon">⚠️</div>
+            <h2>Error</h2>
+            <p>{{ message }}</p>
 
-<a href="/">Go Back</a>
+            <!-- Go Back button uses history.back() -->
+            <a class="btn btn-back" href="javascript:history.back()">Go Back</a>
+
+            <!-- Home button empty, fills on hover -->
+            <a class="btn btn-home" href="{{ url_for('home') }}">Home</a>
+        </div>
+    </div>
 
 </body>
+
 </html>

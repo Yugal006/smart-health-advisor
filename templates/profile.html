@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-result-page">
+    <div class="dashboard-wrapper">
+
+        <!-- ================= SIDEBAR ================= -->
+        <aside class="patient-sidebar">
+
+            <div class="logo-area">
+                <span class="green-dot"></span>
+                <h2 class="logo-text">
+                    <span class="health">Code</span><span class="ai">Cure</span>
+                </h2>
+            </div>
+
+            <!-- USER CARD -->
+            <div class="patient-card">
+                <div class="avatar">
+                    {{ avatar }}
+                </div>
+                <div class="details">
+                    <h3>{{ user.name }}</h3>
+                    <p>{{ user.email }}</p>
+                </div>
+            </div>
+
+            <!-- NAVIGATION -->
+            <nav class="action-nav">
+
+                <button class="nav-btn active">Profile</button>
+
+                <!-- ✅ ADMIN USER PANEL -->
+                {% if user.is_admin %}
+                <a href="/admin/users" class="nav-btn">
+                    User Panel
+                </a>
+                {% endif %}
+
+                <!-- ✅ DELETE ACCOUNT -->
+                <button class="nav-btn danger-btn" onclick="openDeleteModal()">
+                    Delete Account
+                </button>
+
+                <!-- ✅ LOGOUT -->
+                <a href="/logout" class="nav-btn">
+                    Logout
+                </a>
+
+            </nav>
+
+        </aside>
+
+        <!-- ================= MAIN CONTENT ================= -->
+        <main class="main-content">
+
+            <div class="top-bar">
+                <h1>Profile Settings</h1>
+            </div>
+
+            <div class="report-grid">
+
+                <!-- ================= ACCOUNT INFO ================= -->
+                <div class="glass-card">
+                    <h3>Account Information</h3>
+                    <p><b>Name:</b> {{ user.name }}</p>
+                    <p><b>Email:</b> {{ user.email }}</p>
+                    <p><b>Role:</b> {{ "Admin" if user.is_admin else "User" }}</p>
+                </div>
+
+                <!-- ================= UPDATE PROFILE ================= -->
+                <div class="glass-card">
+                    <h3>Update Profile</h3>
+
+                    <form action="/profile/update" method="POST" class="advisor-form">
+
+                        <div class="input-box modern-input">
+                            <input type="text" name="name" value="{{ user.name }}" required>
+                            <label>Name</label>
+                        </div>
+
+                        <div class="input-box modern-input">
+                            <input type="email" name="email" value="{{ user.email }}" required>
+                            <label>Email</label>
+                        </div>
+
+                        <button class="btn">Update Profile</button>
+
+                    </form>
+                </div>
+
+                <!-- ================= SECURITY ================= -->
+                <div class="glass-card">
+                    <h3>Security</h3>
+
+                    <form action="/profile/password" method="POST" class="advisor-form">
+
+                        <div class="input-box modern-input">
+                            <input type="password" name="old_password" required>
+                            <label>Current Password</label>
+                        </div>
+
+                        <div class="input-box modern-input">
+                            <input type="password" name="new_password" required>
+                            <label>New Password</label>
+                        </div>
+
+                        <button class="btn">Change Password</button>
+
+                    </form>
+                </div>
+
+                <!-- ================= QUICK ACTIONS ================= -->
+                <div class="glass-card wide-card">
+                    <h3>Quick Actions</h3>
+
+                    <div class="bottom-actions">
+                        <a href="/index" class="btn-primary">Start Diagnosis</a>
+                        <a href="/donor/register" class="btn-outline">Blood Donate</a>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+</div>
+
+<!-- ================= DELETE MODAL ================= -->
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal-box glass-card">
+
+        <h3>Delete Account</h3>
+        <p>This action is permanent. Enter your password to continue.</p>
+
+        <form action="/profile/delete" method="POST">
+
+            <div class="input-box modern-input">
+                <input type="password" name="password" required>
+                <label>Password</label>
+            </div>
+
+            <div class="modal-actions">
+                <button type="submit" class="btn-danger">Delete</button>
+                <button type="button" onclick="closeDeleteModal()" class="btn-outline">Cancel</button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+<!-- ================= JS ================= -->
+<script>
+    function openDeleteModal() {
+        document.getElementById("deleteModal").style.display = "flex";
+    }
+
+    function closeDeleteModal() {
+        document.getElementById("deleteModal").style.display = "none";
+    }
+</script>
+
+{% endblock %}

@@ -5,19 +5,12 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
-
-    <title>{% block title %}CodeCure{% endblock %}</title>
+    <title>CodeCure</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/globals.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-    <!-- Leaflet Map -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 
 <body>
@@ -33,22 +26,21 @@
             <nav class="main-nav">
                 <ul class="nav-list">
 
-                    <li class="{% if request.endpoint == 'home' %}current{% endif %}"><a
-                            href="{{ url_for('home') }}">Home</a></li>
-                    <li class="{% if request.endpoint == 'index' %}current{% endif %}">
-                        <a href="{{ url_for('index') }}">Health AI</a>
-                    </li>
-                    <li class="{% if request.endpoint == 'donor_register' %}current{% endif %}"><a
-                            href="{{ url_for('donor_register') }}">Blood Donate</a></li>
-                    <li class="{% if request.endpoint == 'contact' %}current{% endif %}"><a
-                            href="{{ url_for('contact') }}">Contact</a></li>
-                    <li class="{% if request.endpoint == 'about_us' %}current{% endif %}"><a
-                            href="{{ url_for('about_us') }}">About Us</a></li>
+                    <li><a href="{{ url_for('home') }}">Home</a></li>
+
+                    <li><a href="{{ url_for('index') }}">Health AI</a></li>
+
+                    <li><a href="{{ url_for('donor_register') }}">Blood Donate</a></li>
+
+                    <li><a href="{{ url_for('contact') }}">Contact</a></li>
+
+                    <li><a href="{{ url_for('about_us') }}">About Us</a></li>
                     {% if session.get("is_admin") %}
                     <li>
                         <a href="{{ url_for('admin_donors') }}">Admin Panel</a>
                     </li>
                     {% endif %}
+
                 </ul>
             </nav>
 
@@ -67,13 +59,31 @@
             </a>
 
         </header>
-        {% with messages = get_flashed_messages() %}
-        {% for msg in messages %}
-        <p style="color:green">{{ msg }}</p>
-        {% endfor %}
-        {% endwith %}
 
-        {% block content %}{% endblock %}
+
+        <section class="hero">
+
+            <div class="hero-text">
+
+                <p class="tagline">Your Health, Our Priority</p>
+
+                <h1>
+                    <span class="green">Empowering you to live</span>
+                    <span>A Healthier Life</span>
+                </h1>
+
+                <p class="description">
+                    Discover expert care, advice, and tools to achieve your wellness goals.
+                    Personalized health solutions for your unique needs.
+                </p>
+
+                <a href="{{ url_for('start') }}" class="cta-btn">
+                    Let's Get Started
+                </a>
+
+            </div>
+
+        </section>
 
     </div>
 

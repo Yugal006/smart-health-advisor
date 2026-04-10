@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}About Us - CodeCure{% endblock %}
+
+{% block content %}
+
+<section class="about-section">
+
+    <div class="about-card">
+        <h1>About Us</h1>
+
+        <p>
+            CodeCure is committed to providing accessible and reliable healthcare solutions
+            in one convenient platform. We connect patients with qualified doctors,
+            offer easy appointment booking, and ensure quick support during emergencies.
+            Our goal is to make healthcare simple, secure, and stress-free for everyone.
+        </p>
+    </div>
+
+    <div class="features">
+
+        <div class="feature">
+            <div class="feature-icon">
+                <img src="{{ url_for('static', filename='images/logos/emergency.png') }}">
+            </div>
+            <p>Emergency Care</p>
+        </div>
+
+        <div class="feature">
+            <div class="feature-icon">
+                <img src="{{ url_for('static', filename='images/logos/booking.png') }}">
+            </div>
+            <p>Easy Booking</p>
+        </div>
+
+        <div class="feature">
+            <div class="feature-icon">
+                <img src="{{ url_for('static', filename='images/logos/certified.png') }}">
+            </div>
+            <p>Certified Specialists</p>
+        </div>
+
+    </div>
+
+</section>
+
+<section class="team-section">
+
+    <h2>Meet the Team</h2>
+
+    <div class="team-cards">
+
+        <div class="team-card">
+            <img src="{{ url_for('static', filename='images/team/jane.jpg') }}" class="team-photo">
+            <h3>Sejal Phadtare</h3>
+            <p class="role">Frontend Developer</p>
+            <p>Email: Sej@example.com</p>
+            <p>Phone: +1 234 567 8901</p>
+            <p class="description">
+                Responsible for crafting beautiful and responsive UI.
+            </p>
+        </div>
+
+        <div class="team-card">
+            <img src="{{ url_for('static', filename='images/team/YLoryth.jpeg') }}" class="team-photo">
+            <h3>Yugal Mahajan</h3>
+            <p class="role">Backend Developer</p>
+            <p>Email: john@example.com</p>
+            <p>Phone: +1 234 567 8902</p>
+            <p class="description">
+                Handles backend logic, APIs, and database.
+            </p>
+        </div>
+
+        <div class="team-card">
+            <img src="{{ url_for('static', filename='images/team/Divya.jpg') }}" class="team-photo">
+            <h3>Divyanshi</h3>
+            <p class="role">AI/ML Engineer</p>
+            <p>Email: Divya@example.com</p>
+            <p>Phone: +1 234 567 8903</p>
+            <p class="description">
+                Builds ML models and health prediction logic.
+            </p>
+        </div>
+
+        <div class="team-card">
+            <img src="{{ url_for('static', filename='images/team/Deb.jpg') }}" class="team-photo">
+            <h3>Debjyoti Sinha</h3>
+            <p class="role">UI/UX Designer</p>
+            <p>Email: Deb@example.com</p>
+            <p>Phone: +1 234 567 8904</p>
+            <p class="description">
+                Designs smooth and user-friendly experiences.
+            </p>
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

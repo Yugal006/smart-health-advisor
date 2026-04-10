@@ -18,34 +18,41 @@ def format_final_response(
     )
 
     response = {
+
         "user": {
-            "name": user_data["name"],
-            "age": user_data["age"]
+            "name": user_data.get("name", "User"),
+            "age": user_data.get("age", "N/A"),
+            "city": user_data.get("city", ""),
+            "search_location": user_data.get("search_location", "")
         },
 
         "analysis": {
             "top_condition": top_condition,
-            "all_possible_conditions": ranked_conditions
+            "possible_conditions": ranked_conditions
         },
 
         "risk_assessment": {
-            "risk_level": risk_data["risk_level"],
-            "risk_score": risk_data["risk_score"],
-            "flags": risk_data["flags"]
+            "risk_level": risk_data.get("risk_level", "unknown"),
+            "risk_score": risk_data.get("risk_score", 0),
+            "flags": risk_data.get("flags", [])
         },
 
         "medication": {
             "recommended": medicine_data.get("recommended_medicines", []),
+            "self_care": medicine_data.get("self_care", []),
             "warnings": medicine_data.get("warnings", [])
         },
 
-        "appointment": appointment_data,
+        "appointment": {
+        "doctor_type": appointment_data.get("doctor_type"),
+        "urgency": appointment_data.get("urgency"),
+        "message": appointment_data.get("message"),
+        "nearby_doctors": appointment_data.get("nearby_doctors", [])
+        },
 
         "disclaimer": (
-            "This system provides AI-based health suggestions "
-            "for educational purposes only. It does not replace "
-            "professional medical advice. Please consult a "
-            "licensed healthcare provider for accurate diagnosis."
+            "This AI system provides health suggestions for educational "
+            "purposes only and does not replace professional medical advice."
         )
     }
 

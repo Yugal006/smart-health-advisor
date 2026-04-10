@@ -1,55 +1,46 @@
 # backend/symptom_analyzer.py
 
-from collections import defaultdict
+from ml.predict_disease import predict_disease
 
-# Symptom → Possible Conditions Map
-SYMPTOM_CONDITION_MAP = {
-    "fever": ["viral infection", "flu", "covid-19"],
-    "headache": ["migraine", "tension headache", "flu"],
-    "cough": ["flu", "common cold", "bronchitis"],
-    "sore throat": ["common cold", "flu"],
-    "fatigue": ["anemia", "viral infection", "thyroid disorder"],
-    "chest pain": ["heart disease", "anxiety", "acid reflux"],
-    "shortness of breath": ["asthma", "heart disease", "covid-19"],
-    "nausea": ["food poisoning", "gastritis", "migraine"],
-    "vomiting": ["food poisoning", "stomach infection"],
-    "dizziness": ["low blood pressure", "anemia", "dehydration"]
-}
-
-
-def analyze_symptoms(user_data):
+def analyze_symptoms(user_data, top_k=5):
     """
-    Takes validated user_data.
-    Returns ranked list of possible conditions.
+    Predict diseases from user symptoms using trained ML model.
+    Returns ranked list with match scores.
     """
+    # -----------------------------
+    # 1. Extract symptoms from user input
+    # -----------------------------
+    raw_input = user_data.get("symptoms", [])
+    if not raw_input:
+        return [{"rank": 1, "condition": "Not clearly identified", "match_score": 0}]
 
-    selected_symptoms = user_data["symptoms"]
+    # -----------------------------
+    # 2. Predict using ML model
+    # -----------------------------
+    try:
+        predictions = predict_disease(raw_input, top_k=top_k)
+    except Exception as e:
+        print("Prediction error:", e)
+        return [{"rank": 1, "condition": "Not clearly identified", "match_score": 0}]
 
-    condition_scores = defaultdict(int)
-
-    # Score conditions based on symptom matches
-    for symptom in selected_symptoms:
-        if symptom in SYMPTOM_CONDITION_MAP:
-            for condition in SYMPTOM_CONDITION_MAP[symptom]:
-                condition_scores[condition] += 1
-
-    if not condition_scores:
-        return []
-
-    # Sort by highest score
-    ranked_conditions = sorted(
-        condition_scores.items(),
-        key=lambda x: x[1],
-        reverse=True
-    )
-
-    # Convert to structured list
-    result = [
+    # -----------------------------
+    # 3. Build ranked output
+    # -----------------------------
+    ranked_conditions = [
         {
-            "condition": condition,
-            "match_score": score
+            "rank": i + 1,
+            "condition": pred["disease"],
+            "confidence": pred["probability"]
         }
-        for condition, score in ranked_conditions
+        for i, pred in enumerate(predictions)
     ]
 
-    return result
+    # Ensure fallback
+    if not ranked_conditions:
+        ranked_conditions.append({
+            "rank": 1,
+            "condition": "Not clearly identified",
+            "match_score": 0
+        })
+
+    return ranked_conditions
