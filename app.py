@@ -55,9 +55,15 @@ init_db()
 # -----------------------------
 # LOAD SYMPTOM LIST FOR FRONTEND
 # -----------------------------
+# FEATURE_PATH = "ml/symptom_columns.pkl"
+# symptom_columns = joblib.load(FEATURE_PATH)
+# ALL_SYMPTOMS = symptom_columns
+
 FEATURE_PATH = "ml/symptom_columns.pkl"
-symptom_columns = joblib.load(FEATURE_PATH)
-ALL_SYMPTOMS = symptom_columns
+
+def get_symptoms():
+    return joblib.load(FEATURE_PATH)
+
 
 
 # -----------------------------
@@ -146,7 +152,7 @@ def index():
 
     return render_template(
         "index.html",
-        symptoms=ALL_SYMPTOMS,
+        symptoms=get_symptoms(),  # ✅ lazy load
         user=user
     )
 

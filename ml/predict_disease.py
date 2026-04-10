@@ -5,16 +5,39 @@ import os
 import re
 
 # =====================================
-# 1. LOAD TRAINED MODEL
+# PATHS
 # =====================================
 
 BASE_DIR = os.path.dirname(__file__)
 
 MODEL_PATH = os.path.join(BASE_DIR, "disease_model.pkl")
 FEATURE_PATH = os.path.join(BASE_DIR, "symptom_columns.pkl")
+INDEX_1 = os.path.join(BASE_DIR, "disease_symptom_map.pkl")
+INDEX_2 = os.path.join(BASE_DIR, "symptom_disease_map.pkl")
 
-model = joblib.load(MODEL_PATH)
-symptom_columns = joblib.load(FEATURE_PATH)
+# =====================================
+# LAZY LOADING (IMPORTANT 🔥)
+# =====================================
+
+model = None
+symptom_columns = None
+disease_symptom_map = None
+symptom_disease_map = None
+
+def load_resources():
+    global model, symptom_columns, disease_symptom_map, symptom_disease_map
+
+    if model is None:
+        model = joblib.load(MODEL_PATH)
+
+    if symptom_columns is None:
+        symptom_columns = joblib.load(FEATURE_PATH)
+
+    if disease_symptom_map is None:
+        disease_symptom_map = joblib.load(INDEX_1)
+
+    if symptom_disease_map is None:
+        symptom_disease_map = joblib.load(INDEX_2)
 
 # # =====================================
 # # 2. LOAD DATASET
@@ -356,6 +379,8 @@ def filter_rare_diseases(predictions):
 # =====================================
 
 def predict_disease(user_symptoms, top_k=5):
+
+    load_resources()  # 🔥 IMPORTANT (loads model only when needed)
 
     if not user_symptoms:
 
