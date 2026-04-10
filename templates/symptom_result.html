@@ -17,14 +17,31 @@
             </div>
 
             <div class="patient-card">
+
+                <!-- Avatar -->
                 <div class="avatar">
                     {% set np = result.user.name.split(' ') %}
-                    {{ np[0][0]|upper|default('Y') }}{% if np|length > 1 %}{{ np[-1][0]|upper|default('Y') }}{% endif %}
+                    {{ np[0][0]|upper }}
+                    {% if np|length > 1 %}
+                    {{ np[-1][0]|upper }}
+                    {% endif %}
                 </div>
+
+                <!-- User Details -->
                 <div class="details">
                     <h3>{{ result.user.name }}</h3>
-                    <p>ID: #{{ result.user.id }} • Age: {{ result.user.age }}</p>
+
+                    <!-- Email (better than ID) -->
+                    <p title="{{ result.user.email }}">
+                        {{ result.user.email }}
+                    </p>
+
+                    <!-- Age Badge -->
+                    <span class="age-badge">
+                        Age: {{ result.user.age }}
+                    </span>
                 </div>
+
             </div>
 
             <nav class="action-nav">
@@ -245,7 +262,7 @@
                         Distance: ${doc.distance || "N/A"} km<br>
                         <a href="https://www.google.com/maps/search/?api=1&query=${doc.lat},${doc.lon}" target="_blank">Directions</a>
                     `;
-                        // Address: ${doc.address || "N/A"}<br>
+                    // Address: ${doc.address z|| "N/A"}<br>
 
                     L.marker([doc.lat, doc.lon], { icon: icon })
                         .addTo(map)

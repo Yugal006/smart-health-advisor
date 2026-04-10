@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-result-page">
+    <div class="dashboard-wrapper">
+
+        <!-- SIDEBAR -->
+        <aside class="patient-sidebar">
+
+            <div class="logo-area">
+                <span class="green-dot"></span>
+                <h2 class="logo-text">
+                    <span class="health">Code</span><span class="ai">Cure</span>
+                </h2>
+            </div>
+
+            <nav class="action-nav">
+                <a href="/profile" class="nav-btn">Profile</a>
+                <button class="nav-btn active">User Panel</button>
+                <a href="/logout" class="nav-btn">Logout</a>
+            </nav>
+
+        </aside>
+
+        <!-- MAIN -->
+        <main class="main-content">
+
+            <div class="top-bar">
+                <h1>Admin User Panel</h1>
+            </div>
+
+            <!-- SEARCH -->
+            <div class="glass-card">
+                <h3>Search Users</h3>
+
+                <input type="text" id="searchInput" placeholder="Search by name or email..." onkeyup="searchUsers()"
+                    class="search-box">
+            </div>
+
+            <!-- USERS LIST -->
+            <div class="glass-card">
+                <h3>All Registered Users</h3>
+
+                <div class="user-list" id="userList">
+
+                    {% for user in users %}
+                    <div class="user-card">
+
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                {{ user[1][0]|upper }}
+                            </div>
+
+                            <div>
+                                <h4>{{ user[1] }}</h4>
+                                <p>{{ user[2] }}</p>
+
+                                {% if user[3] %}
+                                <span class="admin-badge">Admin</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="user-actions">
+                            <a href="/admin/delete_user/{{ user[0] }}" class="btn-danger"
+                                onclick="return confirm('Delete this user?')">
+                                Delete
+                            </a>
+                        </div>
+
+                    </div>
+                    {% endfor %}
+
+                </div>
+            </div>
+
+        </main>
+
+    </div>
+</div>
+
+<!-- JS SEARCH -->
+<script>
+    function searchUsers() {
+        let input = document.getElementById("searchInput").value.toLowerCase();
+        let cards = document.querySelectorAll(".user-card");
+
+        cards.forEach(card => {
+            let text = card.innerText.toLowerCase();
+            card.style.display = text.includes(input) ? "flex" : "none";
+        });
+    }
+</script>
+
+{% endblock %}

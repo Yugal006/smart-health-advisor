@@ -28,17 +28,34 @@
 
                     <li><a href="{{ url_for('home') }}">Home</a></li>
 
+                    <li><a href="{{ url_for('index') }}">Health AI</a></li>
+
                     <li><a href="{{ url_for('donor_register') }}">Blood Donate</a></li>
 
                     <li><a href="{{ url_for('contact') }}">Contact</a></li>
 
                     <li><a href="{{ url_for('about_us') }}">About Us</a></li>
+                    {% if session.get("is_admin") %}
+                    <li>
+                        <a href="{{ url_for('admin_donors') }}">Admin Panel</a>
+                    </li>
+                    {% endif %}
 
                 </ul>
             </nav>
 
-            <a href="{{ url_for('user_profile') }}">
-                <img src="{{ url_for('static', filename='images/logos/user.png') }}" class="user">
+            <a href="{{ url_for('user_profile') }}" class="avatar-link" title="View Profile">
+                {% if session.get("user") %}
+                {% set np = session.get("user")["name"].split(' ') %}
+                <div class="user-avatar">
+                    {{ np[0][0]|upper }}
+                    {% if np|length > 1 %}
+                    {{ np[-1][0]|upper }}
+                    {% endif %}
+                </div>
+                {% else %}
+                <img src="{{ url_for('static', filename='images/logos/user.webp') }}" class="user">
+                {% endif %}
             </a>
 
         </header>
@@ -60,7 +77,7 @@
                     Personalized health solutions for your unique needs.
                 </p>
 
-                <a href="{{ url_for('index') }}" class="cta-btn">
+                <a href="{{ url_for('start') }}" class="cta-btn">
                     Let's Get Started
                 </a>
 

@@ -35,21 +35,43 @@
 
                     <li class="{% if request.endpoint == 'home' %}current{% endif %}"><a
                             href="{{ url_for('home') }}">Home</a></li>
+                    <li class="{% if request.endpoint == 'index' %}current{% endif %}">
+                        <a href="{{ url_for('index') }}">Health AI</a>
+                    </li>
                     <li class="{% if request.endpoint == 'donor_register' %}current{% endif %}"><a
                             href="{{ url_for('donor_register') }}">Blood Donate</a></li>
                     <li class="{% if request.endpoint == 'contact' %}current{% endif %}"><a
                             href="{{ url_for('contact') }}">Contact</a></li>
                     <li class="{% if request.endpoint == 'about_us' %}current{% endif %}"><a
                             href="{{ url_for('about_us') }}">About Us</a></li>
-
+                    {% if session.get("is_admin") %}
+                    <li>
+                        <a href="{{ url_for('admin_donors') }}">Admin Panel</a>
+                    </li>
+                    {% endif %}
                 </ul>
             </nav>
 
-            <a href="{{ url_for('user_profile') }}">
-                <img src="{{ url_for('static', filename='images/logos/user.png') }}" class="user">
+            <a href="{{ url_for('user_profile') }}" class="avatar-link" title="View Profile">
+                {% if session.get("user") %}
+                {% set np = session.get("user")["name"].split(' ') %}
+                <div class="user-avatar">
+                    {{ np[0][0]|upper }}
+                    {% if np|length > 1 %}
+                    {{ np[-1][0]|upper }}
+                    {% endif %}
+                </div>
+                {% else %}
+                <img src="{{ url_for('static', filename='images/logos/user.webp') }}" class="user">
+                {% endif %}
             </a>
 
         </header>
+        {% with messages = get_flashed_messages() %}
+        {% for msg in messages %}
+        <p style="color:green">{{ msg }}</p>
+        {% endfor %}
+        {% endwith %}
 
         {% block content %}{% endblock %}
 

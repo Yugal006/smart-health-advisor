@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+
+<section class="advisor-hero">
+    <div class="advisor-container">
+        <h1 class="advisor-heading"><span class="green">Login</span> to Your Account</h1>
+        <p class="advisor-sub">Enter your email and password to continue.</p>
+
+        {% if message %}
+        <p style="color: green; font-weight:bold;">{{ message }}</p>
+        {% endif %}
+
+        {% if error %}
+        <p style="color:red; font-weight:bold;">{{ error }}</p>
+        {% endif %}
+
+        <form action="/login" method="POST" class="advisor-form">
+
+            <div class="form-row">
+                <div class="input-box">
+                    <label>Email</label>
+                    <input type="email" name="email" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="input-box">
+                    <label>Password</label>
+                    <input type="password" name="password" required>
+                </div>
+            </div>
+
+            <div class="button-row">
+                <button type="submit" class="btn">Login</button>
+                <a href="/register" class="btn-secondary">Register</a>
+            </div>
+
+        </form>
+    </div>
+</section>
+
+{% endblock %}

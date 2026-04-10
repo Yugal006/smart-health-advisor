@@ -5,8 +5,21 @@ from flask import Flask, render_template, request, session, Response
 import joblib
 from datetime import datetime
 import io
+from flask import redirect, url_for, flash
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
+from backend.user_engine import init_user_db, register_user, authenticate_user
+from backend.utils import generate_avatar
+from backend.user_engine import update_user_details, update_password
+from backend.user_engine import get_all_users, delete_user_by_admin
+from backend.user_engine import make_admin
+import re
+
+# Initialize user DB
+init_user_db()
+# from backend.user_engine import make_admin
+# make_admin("yugmahajan2006@gmail.com")
+
 # -----------------------------
 # BACKEND MODULES
 # -----------------------------
@@ -44,6 +57,70 @@ FEATURE_PATH = "ml/symptom_columns.pkl"
 symptom_columns = joblib.load(FEATURE_PATH)
 ALL_SYMPTOMS = symptom_columns
 
+
+# -----------------------------
+#Login
+# -----------------------------
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        user = authenticate_user(email, password)
+
+        if user:
+            session["user"] = {
+                "id": user["id"],
+                "name": user["name"],
+                "email": user["email"],
+                "is_admin": user.get("is_admin", 0)
+            }
+            session["is_admin"] = user.get("is_admin", 0)
+
+            return redirect(url_for("index"))
+        else:
+            return render_template("login.html", error="Invalid email or password")
+
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("Logged out successfully!")
+    return redirect(url_for("home"))
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        name = request.form.get("name")
+        email = request.form.get("email")
+        password = request.form.get("password")
+        confirm = request.form.get("confirm_password")
+
+        # Password match check
+        if password != confirm:
+            return render_template("register.html", error="Passwords do not match")
+
+        success, message = register_user(email, password, name)
+
+        if success:
+            # 🔥 make admin if email matches
+            if email == "yugmahajan2006@gmail.com":
+                make_admin(email)
+
+                flash("Account created successfully! Please login.", "success")
+                return redirect(url_for("login"))
+
+            else:
+                return render_template("register.html", error=message)
+            
+        else:
+            return render_template("register.html", error=message)
+
+    return render_template("register.html")
+
 # -----------------------------
 # HOME & INFO PAGES
 # -----------------------------
@@ -51,13 +128,120 @@ ALL_SYMPTOMS = symptom_columns
 def home():
     return render_template("home.html")
 
+@app.route("/start")
+def start():
+    if "user" in session:
+        return redirect(url_for("index"))  # already logged in
+    else:
+        return redirect(url_for("login"))  # not logged in
+
 @app.route("/index")
 def index():
-    return render_template("index.html", symptoms=ALL_SYMPTOMS)
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    user = session.get("user")
+
+    return render_template(
+        "index.html",
+        symptoms=ALL_SYMPTOMS,
+        user=user
+    )
 
 @app.route("/profile")
 def user_profile():
-    return render_template("profile.html")
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    user = session["user"]
+    avatar = generate_avatar(user["name"])
+
+    return render_template("profile.html", user=user, avatar=avatar)
+
+@app.route("/profile/update", methods=["POST"])
+def update_profile():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    name = request.form["name"]
+    email = request.form["email"]
+
+    # -------------------------
+    # ✅ VALIDATION
+    # -------------------------
+    if not name.strip():
+        flash("Name cannot be empty")
+        return redirect(url_for("user_profile"))
+
+    # Better email validation using regex
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        flash("Invalid email format")
+        return redirect(url_for("user_profile"))
+
+    # -------------------------
+    # ✅ DB UPDATE
+    # -------------------------
+    update_user_details(session["user"]["id"], name, email)
+
+    # -------------------------
+    # ✅ SESSION UPDATE
+    # -------------------------
+    session["user"]["name"] = name
+    session["user"]["email"] = email
+
+    flash("Profile updated successfully!")
+    return redirect(url_for("user_profile"))
+
+
+@app.route("/profile/password", methods=["POST"])
+def change_password():
+    old = request.form["old_password"]
+    new = request.form["new_password"]
+
+    # Validate old password from DB
+    user_id = session["user"]["id"]
+
+    success, msg = update_password(user_id, old, new)
+
+    if not success:
+        flash(msg)
+    else:
+        flash("Password updated successfully!")
+
+    flash("Password updated successfully!")
+    return redirect(url_for("index"))
+
+
+@app.context_processor
+def inject_user():
+    user = session.get("user")
+    avatar = None
+
+    if user:
+        avatar = generate_avatar(user.get("name"))
+
+    return dict(current_user=user, avatar=avatar)
+
+@app.route("/admin/users")
+def admin_users():
+    if not session.get("is_admin"):
+        return redirect(url_for("login"))
+
+    users = get_all_users()
+    return render_template("admin_users.html", users=users)
+
+@app.route("/admin/delete_user/<int:user_id>")
+def admin_delete_user(user_id):
+    if not session.get("is_admin"):
+        return redirect(url_for("login"))
+
+    delete_user_by_admin(user_id)
+    flash("User deleted successfully!")
+
+    return redirect(url_for("admin_users"))
+
+
+
 
 @app.route("/contact")
 def contact():
@@ -214,20 +398,55 @@ def export_pdf():
     elements.append(Spacer(1, 12))
 
     # -----------------------------
-    # Nearby Doctors
+    # Nearby Doctors (Enhanced)
     # -----------------------------
     nearby_doctors = appt.get('nearby_doctors', [])
+
     if nearby_doctors:
-        elements.append(Paragraph("Nearby Doctors & Clinics:", styles['Heading2']))
+        elements.append(Paragraph("Nearby Doctors & Medical Facilities:", styles['Heading2']))
+
         for doc_info in nearby_doctors:
             name = doc_info.get('name', 'N/A')
-            doc_type = doc_info.get('type', 'N/A')
+            doc_type = doc_info.get('type', 'Medical')
             distance = doc_info.get('distance')
-            distance_str = f"{distance} km" if distance is not None else "Distance N/A"
-            description = doc_info.get('description', '')
-            elements.append(Paragraph(f"- {name} ({doc_type}, {distance_str})", styles['Normal']))
-            if description:
-                elements.append(Paragraph(f"  Description: {description}", styles['Normal']))
+            lat = doc_info.get('lat')
+            lon = doc_info.get('lon')
+
+            distance_str = f"{distance} km" if distance else "N/A"
+
+            # Emoji icon (same as map UI)
+            icon = "🏥"
+            if doc_type in ["clinic", "doctor"]:
+                icon = "👨‍⚕️"
+            elif doc_type == "pharmacy":
+                icon = "💊"
+
+            elements.append(Paragraph(
+                f"{icon} <b>{name}</b> ({doc_type.title()})",
+                styles['Normal']
+            ))
+
+            elements.append(Paragraph(
+                f"Distance: {distance_str}",
+                styles['Normal']
+            ))
+
+            # Coordinates
+            if lat and lon:
+                elements.append(Paragraph(
+                    f"Location: {lat}, {lon}",
+                    styles['Normal']
+                ))
+
+                # Google Maps link
+                map_link = f"https://www.google.com/maps/search/?api=1&query={lat},{lon}"
+                elements.append(Paragraph(
+                    f'<link href="{map_link}">Open in Google Maps</link>',
+                    styles['Normal']
+                ))
+
+            elements.append(Spacer(1, 10))
+
         elements.append(Spacer(1, 12))
 
     # -----------------------------
@@ -272,6 +491,9 @@ def export_pdf():
 # -----------------------------
 @app.route("/admin/donors")
 def admin_donors():
+    if not session.get("is_admin"):
+        return redirect(url_for("login"))
+
     donors = get_all_donors()
     stats = get_blood_group_stats()
     labels = [row[0] for row in stats]
@@ -280,6 +502,9 @@ def admin_donors():
 
 @app.route("/admin/delete/<int:donor_id>")
 def admin_delete_donor(donor_id):
+    if not session.get("is_admin"):
+        return redirect(url_for("login"))
+
     delete_donor(donor_id)
     return render_template("donor_result.html", message="Donor removed successfully.", success=True)
 
