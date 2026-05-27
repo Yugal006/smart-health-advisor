@@ -92,8 +92,19 @@ def find_nearby_doctors(doctor_type, location):
         response = requests.get(
             OVERPASS_URL,
             params={"data": query},
-            timeout=20
+            timeout=20,
+            headers={"User-Agent": "health-app"}
         )
+
+        print("Status Code:", response.status_code)
+        print("Response Text:", response.text[:300])
+
+        if response.status_code != 200:
+            raise Exception(f"Overpass API failed: {response.status_code}")
+
+        if not response.text.strip():
+            raise Exception("Empty response from Overpass")
+
         data = response.json()
 
         places = []

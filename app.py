@@ -253,7 +253,8 @@ def admin_delete_user(user_id):
 
 @app.route("/contact")
 def contact():
-    return render_template("contact.html")
+    # return render_template("contact.html")
+     return render_template("Terminal/index.html")
 
 @app.route("/about")
 def about_us():
