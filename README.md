@@ -119,8 +119,8 @@ System Outputs:
 ### Application Overview
 
 <p align="center">
-  <img src="static/images/screenshots/Home.png" width="45%" alt="Home Page">
-  <img src="static/images/screenshots/Symptom_input.png" width="45%" alt="Symptom Input">
+  <img src="static/images/Screenshots/Home.png" width="45%" alt="Home Page">
+  <img src="static/images/Screenshots/Symptom_input.png" width="45%" alt="Symptom Input">
 </p>
 
 <p align="center">
@@ -133,8 +133,8 @@ System Outputs:
 ### AI Analysis Reports
 
 <p align="center">
-  <img src="static/images/screenshots/Report_1.png" width="45%" alt="Report 1">
-  <img src="static/images/screenshots/Report_2.png" width="45%" alt="Report 2">
+  <img src="static/images/Screenshots/Report_1.png" width="45%" alt="Report 1">
+  <img src="static/images/Screenshots/Report_2.png" width="45%" alt="Report 2">
 </p>
 
 <p align="center">
@@ -147,8 +147,8 @@ System Outputs:
 ### Blood Donor Management System
 
 <p align="center">
-  <img src="static/images/screenshots/Donor_reg.png" width="45%" alt="Donor Search">
-  <img src="static/images/screenshots/Donor_Result.png" width="45%" alt="Donor Results">
+  <img src="static/images/Screenshots/Donor_reg.png" width="45%" alt="Donor Search">
+  <img src="static/images/Screenshots/Donor_Result.png" width="45%" alt="Donor Results">
 </p>
 
 <p align="center">
@@ -161,8 +161,8 @@ System Outputs:
 ### User & Administration
 
 <p align="center">
-  <img src="static/images/screenshots/Profile.png" width="45%" alt="Profile">
-  <img src="static/images/screenshots/admin_panel.png" width="45%" alt="Admin Panel">
+  <img src="static/images/Screenshots/Profile.png" width="45%" alt="Profile">
+  <img src="static/images/Screenshots/admin_panel.png" width="45%" alt="Admin Panel">
 </p>
 
 <p align="center">
@@ -175,8 +175,8 @@ System Outputs:
 ### System Architecture
 
 <p align="center">
-  <img src="static/images/screenshots/flowchart.png" width="45%" alt="Flowchart">
-  <img src="static/images/screenshots/ml_pipeline.png" width="45%" alt="ML Pipeline">
+  <img src="static/images/Screenshots/flowchart.png" width="45%" alt="Flowchart">
+  <img src="static/images/Screenshots/ml_pipeline.png" width="45%" alt="ML Pipeline">
 </p>
 
 <p align="center">
