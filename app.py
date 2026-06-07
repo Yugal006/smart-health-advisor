@@ -1,11 +1,23 @@
 # app.py
 from backend.doctor_locator import find_nearby_doctors
 from backend.location_helper import fix_city_name
-from flask import Flask, render_template, request, session, Response
+
+from flask import (
+    Flask,
+    render_template,
+    request,
+    session,
+    Response,
+    redirect,
+    url_for,
+    flash
+)
+from functools import wraps
+
 import joblib
 from datetime import datetime
 import io
-from flask import redirect, url_for, flash
+
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from backend.user_engine import init_user_db, register_user, authenticate_user
@@ -16,6 +28,17 @@ from backend.user_engine import make_admin
 import re
 import os
 
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+
+        if "user" not in session:
+            return redirect(url_for("login"))
+
+        return f(*args, **kwargs)
+
+    return decorated
+
 # Initialize user DB
 init_user_db()
 # from backend.user_engine import make_admin
@@ -24,7 +47,7 @@ init_user_db()
 # -----------------------------
 # BACKEND MODULES
 # -----------------------------
-from flask import Flask, render_template, request
+
 from backend.blood_donor_engine import (
     init_db,
     register_donor,
@@ -45,7 +68,14 @@ from backend.symptom_analyzer import analyze_symptoms
 # FLASK INIT
 # -----------------------------
 app = Flask(__name__)
-app.secret_key = "Yugal"
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax"
+)
+app.secret_key = os.environ.get(
+    "SECRET_KEY",
+    "smart-health-advisor-dev-key"
+)
 
 # -----------------------------
 # INIT BLOOD DONOR DB
@@ -61,8 +91,10 @@ init_db()
 
 FEATURE_PATH = "ml/symptom_columns.pkl"
 
+ALL_SYMPTOMS = joblib.load(FEATURE_PATH)
+
 def get_symptoms():
-    return joblib.load(FEATURE_PATH)
+    return ALL_SYMPTOMS
 
 
 
@@ -157,6 +189,7 @@ def index():
     )
 
 @app.route("/profile")
+@login_required
 def user_profile():
     if "user" not in session:
         return redirect(url_for("login"))
@@ -167,6 +200,7 @@ def user_profile():
     return render_template("profile.html", user=user, avatar=avatar)
 
 @app.route("/profile/update", methods=["POST"])
+@login_required
 def update_profile():
     if "user" not in session:
         return redirect(url_for("login"))
@@ -202,6 +236,7 @@ def update_profile():
 
 
 @app.route("/profile/password", methods=["POST"])
+@login_required
 def change_password():
     old = request.form["old_password"]
     new = request.form["new_password"]
@@ -216,7 +251,7 @@ def change_password():
     else:
         flash("Password updated successfully!")
 
-    flash("Password updated successfully!")
+
     return redirect(url_for("index"))
 
 
@@ -231,6 +266,7 @@ def inject_user():
     return dict(current_user=user, avatar=avatar)
 
 @app.route("/admin/users")
+@login_required
 def admin_users():
     if not session.get("is_admin"):
         return redirect(url_for("login"))
@@ -239,6 +275,7 @@ def admin_users():
     return render_template("admin_users.html", users=users)
 
 @app.route("/admin/delete_user/<int:user_id>")
+@login_required
 def admin_delete_user(user_id):
     if not session.get("is_admin"):
         return redirect(url_for("login"))
@@ -322,10 +359,11 @@ def analyze():
         # Save result in session
         session["final_result"] = final_result
 
-        print("Doctor type:", doctor_type)
-        print("City:", city)
-        print("Doctors found:", nearby_doctors)
-        print("Search location:", search_location)
+        app.logger.info(
+    f"Doctor={doctor_type}, "
+    f"City={city}, "
+    f"Location={search_location}"
+)
         return render_template(
             "symptom_result.html",
             result=final_result,
@@ -337,7 +375,7 @@ def analyze():
         return render_template("error.html", message=str(e))
 
     except Exception as e:
-        print("Unexpected Error:", e)
+        app.logger.error(f"Unexpected Error: {str(e)}")
         return render_template(
             "error.html",
             message="Unexpected error occurred. Please try again."
@@ -499,6 +537,7 @@ def export_pdf():
 # ADMIN BLOOD DONOR PANEL
 # -----------------------------
 @app.route("/admin/donors")
+@login_required
 def admin_donors():
     if not session.get("is_admin"):
         return redirect(url_for("login"))
@@ -510,6 +549,7 @@ def admin_donors():
     return render_template("admin_donors.html", donors=donors, labels=labels, values=values)
 
 @app.route("/admin/delete/<int:donor_id>")
+@login_required
 def admin_delete_donor(donor_id):
     if not session.get("is_admin"):
         return redirect(url_for("login"))
@@ -550,9 +590,32 @@ def donor_search():
     results = search_donors(blood_group, city)
     return render_template("donor_result.html", donors=results, search=True, requested_group=blood_group)
 
+# ----------------------------
+# ERROR 404 PAGE
+# -----------------------------
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template(
+        "error.html",
+        message="Page not found."
+    ), 404
+
+# -----------------------------
+#ERROR 500 PAGE
+# -----------------------------
+@app.errorhandler(500)
+def internal_server_error(error):
+    return render_template(
+        "error.html",
+        message="Internal server error."
+    ), 500
 # -----------------------------
 # RUN APP
 # -----------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(
+    host="0.0.0.0",
+    port=port,
+    debug=False
+)
