@@ -1,0 +1,46 @@
+{
+    "model": {
+        "algorithm": "Random Forest",
+        "n_estimators": 120,
+        "max_depth": 25,
+        "min_samples_split": 5,
+        "random_state": 42
+    },
+    "dataset": {
+        "dataset_1": {
+            "rows_original": 246945,
+            "rows_after_duplicate_removal": 189647,
+            "duplicates_removed": 57298
+        },
+        "dataset_2": {
+            "rows_original": 26,
+            "rows_after_duplicate_removal": 26,
+            "duplicates_removed": 0
+        },
+        "merged_rows_before_filtering": 246971,
+        "merged_rows_after_cleaning": 189603,
+        "columns": 417,
+        "features": 416,
+        "disease_classes": 727,
+        "missing_values_before": 0,
+        "missing_values_after": 0,
+        "duplicate_rows_removed": 57298,
+        "rare_disease_classes_removed": 70,
+        "rare_disease_records_removed": 70
+    },
+    "split": {
+        "training_samples": 151682,
+        "testing_samples": 37921,
+        "test_size": 0.2
+    },
+    "performance": {
+        "accuracy": 0.730571,
+        "accuracy_percent": 73.06,
+        "precision_macro": 0.643581,
+        "recall_macro": 0.446678,
+        "f1_macro": 0.498094,
+        "precision_weighted": 0.78492,
+        "recall_weighted": 0.730571,
+        "f1_weighted": 0.72891
+    }
+}

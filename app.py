@@ -27,6 +27,7 @@ from backend.user_engine import get_all_users, delete_user_by_admin
 from backend.user_engine import make_admin
 import re
 import os
+import json
 
 def login_required(f):
     @wraps(f)
@@ -609,6 +610,38 @@ def internal_server_error(error):
         "error.html",
         message="Internal server error."
     ), 500
+# -----------------------------
+# ML MODEL DASHBOARD
+# -----------------------------
+
+@app.route("/ml-dashboard")
+def ml_dashboard():
+
+    metrics_path = "ml/model_metrics.json"
+
+    try:
+        with open(metrics_path, "r") as f:
+            metrics = json.load(f)
+
+        return render_template(
+            "ml_dashboard.html",
+            metrics=metrics
+        )
+
+    except FileNotFoundError:
+        return render_template(
+            "error.html",
+            message="ML model metrics file not found. Please train the model first."
+        )
+
+    except Exception as e:
+        print("ML Dashboard Error:", e)
+
+        return render_template(
+            "error.html",
+            message="Unable to load ML model metrics."
+        )
+
 # -----------------------------
 # RUN APP
 # -----------------------------

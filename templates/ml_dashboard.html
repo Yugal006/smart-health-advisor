@@ -1,0 +1,602 @@
+{% extends "base.html" %}
+
+{% block title %}ML Model Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="ml-dashboard-page">
+
+    <!-- Header -->
+    <div class="ml-dashboard-header">
+        <div>
+            <span class="ml-badge">MACHINE LEARNING</span>
+            <h1>Model Performance Dashboard</h1>
+            <p>
+                Transparency into model accuracy, dataset preparation,
+                training and evaluation.
+            </p>
+        </div>
+
+        <a href="{{ url_for('index') }}" class="btn-outline">
+            Back to Advisor
+        </a>
+    </div>
+
+
+    <!-- =========================
+         PERFORMANCE OVERVIEW
+    ========================== -->
+
+    <section class="ml-section">
+
+        <h2>Model Performance</h2>
+
+        <div class="ml-stats-grid">
+
+            <!-- Accuracy -->
+            <div class="ml-stat-card accuracy-card">
+                <div class="ml-stat-icon">✓</div>
+
+                <div>
+                    <span class="ml-stat-label">Test Accuracy</span>
+
+                    <div class="ml-big-value">
+                        {{ metrics.performance.accuracy_percent }}%
+                    </div>
+
+                    <span class="ml-stat-note">
+                        Held-out test dataset
+                    </span>
+                </div>
+            </div>
+
+
+            <!-- Algorithm -->
+            <div class="ml-stat-card">
+
+                <div class="ml-stat-icon">🌲</div>
+
+                <div>
+                    <span class="ml-stat-label">Algorithm</span>
+
+                    <div class="ml-value">
+                        {{ metrics.model.algorithm }}
+                    </div>
+
+                    <span class="ml-stat-note">
+                        {{ metrics.model.n_estimators }} decision trees
+                    </span>
+                </div>
+
+            </div>
+
+
+            <!-- Features -->
+            <div class="ml-stat-card">
+
+                <div class="ml-stat-icon">🔬</div>
+
+                <div>
+                    <span class="ml-stat-label">Symptoms / Features</span>
+
+                    <div class="ml-big-value">
+                        {{ metrics.dataset.features }}
+                    </div>
+
+                    <span class="ml-stat-note">
+                        Input features
+                    </span>
+                </div>
+
+            </div>
+
+
+            <!-- Diseases -->
+            <div class="ml-stat-card">
+
+                <div class="ml-stat-icon">🩺</div>
+
+                <div>
+                    <span class="ml-stat-label">Disease Classes</span>
+
+                    <div class="ml-big-value">
+                        {{ metrics.dataset.disease_classes }}
+                    </div>
+
+                    <span class="ml-stat-note">
+                        Classes used for classification
+                    </span>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         PERFORMANCE METRICS
+    ========================== -->
+
+    <section class="ml-section">
+
+        <div class="ml-section-title">
+            <div>
+                <h2>Evaluation Metrics</h2>
+                <p>Performance measured on unseen test data.</p>
+            </div>
+
+            <span class="test-badge">20% TEST SET</span>
+        </div>
+
+
+        <div class="metric-grid">
+
+            <!-- Precision -->
+            <div class="metric-card">
+
+                <div class="metric-top">
+                    <span>Precision</span>
+
+                    <strong>
+                        {{ (metrics.performance.precision_weighted * 100)|round(2) }}%
+                    </strong>
+                </div>
+
+                <div class="metric-bar">
+                    <div class="metric-fill"
+                         style="width: {{ metrics.performance.precision_weighted * 100 }}%;">
+                    </div>
+                </div>
+
+                <p>
+                    Weighted precision across disease classes.
+                </p>
+
+            </div>
+
+
+            <!-- Recall -->
+            <div class="metric-card">
+
+                <div class="metric-top">
+                    <span>Recall</span>
+
+                    <strong>
+                        {{ (metrics.performance.recall_weighted * 100)|round(2) }}%
+                    </strong>
+                </div>
+
+                <div class="metric-bar">
+                    <div class="metric-fill"
+                         style="width: {{ metrics.performance.recall_weighted * 100 }}%;">
+                    </div>
+                </div>
+
+                <p>
+                    Weighted recall across disease classes.
+                </p>
+
+            </div>
+
+
+            <!-- F1 -->
+            <div class="metric-card">
+
+                <div class="metric-top">
+                    <span>F1 Score</span>
+
+                    <strong>
+                        {{ (metrics.performance.f1_weighted * 100)|round(2) }}%
+                    </strong>
+                </div>
+
+                <div class="metric-bar">
+                    <div class="metric-fill"
+                         style="width: {{ metrics.performance.f1_weighted * 100 }}%;">
+                    </div>
+                </div>
+
+                <p>
+                    Weighted balance between precision and recall.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- Macro metrics -->
+        <div class="macro-card">
+
+            <div>
+                <h3>Macro Average</h3>
+                <p>
+                    Each disease class contributes equally to this metric.
+                    This is useful for understanding performance across
+                    less frequent classes.
+                </p>
+            </div>
+
+            <div class="macro-values">
+
+                <div>
+                    <span>Precision</span>
+                    <strong>
+                        {{ (metrics.performance.precision_macro * 100)|round(2) }}%
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Recall</span>
+                    <strong>
+                        {{ (metrics.performance.recall_macro * 100)|round(2) }}%
+                    </strong>
+                </div>
+
+                <div>
+                    <span>F1</span>
+                    <strong>
+                        {{ (metrics.performance.f1_macro * 100)|round(2) }}%
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         DATA CLEANING
+    ========================== -->
+
+    <section class="ml-section">
+
+        <div class="ml-section-title">
+            <div>
+                <h2>Data Cleaning & Preprocessing</h2>
+                <p>
+                    Dataset preparation performed before model training.
+                </p>
+            </div>
+
+            <span class="clean-badge">DATA QUALITY</span>
+        </div>
+
+
+        <div class="cleaning-grid">
+
+            <div class="clean-card">
+
+                <span class="clean-number">
+                    {{ "{:,}".format(metrics.dataset.dataset_1.rows_original) }}
+                </span>
+
+                <h3>Raw Dataset Records</h3>
+
+                <p>
+                    Records loaded from the primary dataset.
+                </p>
+
+            </div>
+
+
+            <div class="clean-card">
+
+                <span class="clean-number">
+                    {{ "{:,}".format(metrics.dataset.duplicate_rows_removed) }}
+                </span>
+
+                <h3>Duplicate Records Removed</h3>
+
+                <p>
+                    Duplicate rows detected and removed during preprocessing.
+                </p>
+
+            </div>
+
+
+            <div class="clean-card">
+
+                <span class="clean-number">
+                    {{ "{:,}".format(
+                        metrics.dataset.dataset_1.rows_after_duplicate_removal
+                    ) }}
+                </span>
+
+                <h3>After Duplicate Removal</h3>
+
+                <p>
+                    Records remaining after duplicate cleaning.
+                </p>
+
+            </div>
+
+
+            <div class="clean-card">
+
+                <span class="clean-number">
+                    {{ metrics.dataset.rare_disease_classes_removed }}
+                </span>
+
+                <h3>Rare Classes Removed</h3>
+
+                <p>
+                    Disease classes having only one record were excluded.
+                </p>
+
+            </div>
+
+
+            <div class="clean-card">
+
+                <span class="clean-number">
+                    {{ metrics.dataset.rare_disease_records_removed }}
+                </span>
+
+                <h3>Rare-Class Records Removed</h3>
+
+                <p>
+                    Records belonging to those rare classes.
+                </p>
+
+            </div>
+
+
+            <div class="clean-card">
+
+                <span class="clean-number">
+                    {{ "{:,}".format(metrics.dataset.merged_rows_after_cleaning) }}
+                </span>
+
+                <h3>Final Training Dataset</h3>
+
+                <p>
+                    Records remaining after preprocessing and filtering.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- Missing values -->
+        <div class="missing-card">
+
+            <div class="missing-icon">✓</div>
+
+            <div>
+                <h3>Missing Value Check</h3>
+
+                <p>
+                    Missing values before handling:
+                    <strong>
+                        {{ "{:,}".format(metrics.dataset.missing_values_before) }}
+                    </strong>
+                </p>
+
+                <p>
+                    Missing values after handling:
+                    <strong>
+                        {{ "{:,}".format(metrics.dataset.missing_values_after) }}
+                    </strong>
+                </p>
+            </div>
+
+            <div class="quality-status">
+                Data Clean
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         DATASET FLOW
+    ========================== -->
+
+    <section class="ml-section">
+
+        <h2>ML Data Processing Pipeline</h2>
+
+        <p class="section-description">
+            The following pipeline shows how raw medical data is transformed
+            into a trained classification model.
+        </p>
+
+
+        <div class="pipeline">
+
+            <div class="pipeline-step">
+                <span>01</span>
+                <strong>Raw Dataset</strong>
+                <small>CSV medical data</small>
+            </div>
+
+            <div class="pipeline-arrow">↓</div>
+
+            <div class="pipeline-step">
+                <span>02</span>
+                <strong>Data Quality Check</strong>
+                <small>Missing values & duplicates</small>
+            </div>
+
+            <div class="pipeline-arrow">↓</div>
+
+            <div class="pipeline-step">
+                <span>03</span>
+                <strong>Duplicate Removal</strong>
+                <small>Remove repeated records</small>
+            </div>
+
+            <div class="pipeline-arrow">↓</div>
+
+            <div class="pipeline-step">
+                <span>04</span>
+                <strong>Column Alignment</strong>
+                <small>416 symptom features</small>
+            </div>
+
+            <div class="pipeline-arrow">↓</div>
+
+            <div class="pipeline-step">
+                <span>05</span>
+                <strong>Dataset Merge</strong>
+                <small>Combine datasets</small>
+            </div>
+
+            <div class="pipeline-arrow">↓</div>
+
+            <div class="pipeline-step">
+                <span>06</span>
+                <strong>Rare-Class Filtering</strong>
+                <small>Remove insufficient classes</small>
+            </div>
+
+            <div class="pipeline-arrow">↓</div>
+
+            <div class="pipeline-step">
+                <span>07</span>
+                <strong>80 / 20 Split</strong>
+                <small>Training & testing</small>
+            </div>
+
+            <div class="pipeline-arrow">↓</div>
+
+            <div class="pipeline-step highlight-step">
+                <span>08</span>
+                <strong>Random Forest</strong>
+                <small>120 decision trees</small>
+            </div>
+
+            <div class="pipeline-arrow">↓</div>
+
+            <div class="pipeline-step success-step">
+                <span>09</span>
+                <strong>Model Evaluation</strong>
+                <small>{{ metrics.performance.accuracy_percent }}% accuracy</small>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         TRAIN / TEST
+    ========================== -->
+
+    <section class="ml-section">
+
+        <h2>Training & Testing Dataset</h2>
+
+        <div class="train-test-card">
+
+            <div class="train-test-header">
+
+                <div>
+                    <span>Training Samples</span>
+                    <strong>
+                        {{ "{:,}".format(metrics.split.training_samples) }}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Testing Samples</span>
+                    <strong>
+                        {{ "{:,}".format(metrics.split.testing_samples) }}
+                    </strong>
+                </div>
+
+            </div>
+
+
+            <div class="split-bar">
+
+                <div class="training-bar"
+                     style="width: {{ (1 - metrics.split.test_size) * 100 }}%;">
+                    80% Training
+                </div>
+
+                <div class="testing-bar"
+                     style="width: {{ metrics.split.test_size * 100 }}%;">
+                    20% Testing
+                </div>
+
+            </div>
+
+            <p class="split-note">
+                The model was trained on 80% of the cleaned dataset and
+                evaluated on the remaining 20% unseen data.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         MODEL CONFIGURATION
+    ========================== -->
+
+    <section class="ml-section">
+
+        <h2>Model Configuration</h2>
+
+        <div class="config-grid">
+
+            <div class="config-item">
+                <span>Algorithm</span>
+                <strong>{{ metrics.model.algorithm }}</strong>
+            </div>
+
+            <div class="config-item">
+                <span>Number of Trees</span>
+                <strong>{{ metrics.model.n_estimators }}</strong>
+            </div>
+
+            <div class="config-item">
+                <span>Maximum Depth</span>
+                <strong>{{ metrics.model.max_depth }}</strong>
+            </div>
+
+            <div class="config-item">
+                <span>Minimum Split</span>
+                <strong>{{ metrics.model.min_samples_split }}</strong>
+            </div>
+
+            <div class="config-item">
+                <span>Random State</span>
+                <strong>{{ metrics.model.random_state }}</strong>
+            </div>
+
+            <div class="config-item">
+                <span>Test Size</span>
+                <strong>{{ (metrics.split.test_size * 100)|round(0)|int }}%</strong>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- Disclaimer -->
+    <div class="ml-disclaimer">
+
+        <strong>Important:</strong>
+
+        The {{ metrics.performance.accuracy_percent }}% value shown above is
+        the Random Forest model's accuracy on the held-out test dataset.
+        It should not be interpreted as the confidence of an individual
+        disease prediction shown to a user.
+
+    </div>
+
+
+</div>
+
+{% endblock %}
