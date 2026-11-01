@@ -17,6 +17,9 @@ Additionally, it features a Blood Donor Management System that allows users to r
 **Deployed Application:**  
 https://smart-health-advisor-qil4.onrender.com/
 
+**Evaluation**
+https://smart-health-advisor-qil4.onrender.com/ml-dashboard
+
 ---
 
 ## Features
