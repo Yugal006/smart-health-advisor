@@ -54,7 +54,7 @@
             <!-- Algorithm -->
             <div class="ml-stat-card">
 
-                <div class="ml-stat-icon">🌲</div>
+                <div class="ml-stat-icon">⚡</div>
 
                 <div>
                     <span class="ml-stat-label">Algorithm</span>
@@ -127,7 +127,9 @@
                 <p>Performance measured on unseen test data.</p>
             </div>
 
-            <span class="test-badge">20% TEST SET</span>
+            <span class="test-badge">
+                {{ (metrics.split.test_size * 100)|round(0)|int }}% TEST SET
+            </span>
         </div>
 
 
@@ -145,8 +147,7 @@
                 </div>
 
                 <div class="metric-bar">
-                    <div class="metric-fill"
-                         style="width: {{ metrics.performance.precision_weighted * 100 }}%;">
+                    <div class="metric-fill" style="width: {{ metrics.performance.precision_weighted * 100 }}%;">
                     </div>
                 </div>
 
@@ -169,8 +170,7 @@
                 </div>
 
                 <div class="metric-bar">
-                    <div class="metric-fill"
-                         style="width: {{ metrics.performance.recall_weighted * 100 }}%;">
+                    <div class="metric-fill" style="width: {{ metrics.performance.recall_weighted * 100 }}%;">
                     </div>
                 </div>
 
@@ -193,8 +193,7 @@
                 </div>
 
                 <div class="metric-bar">
-                    <div class="metric-fill"
-                         style="width: {{ metrics.performance.f1_weighted * 100 }}%;">
+                    <div class="metric-fill" style="width: {{ metrics.performance.f1_weighted * 100 }}%;">
                     </div>
                 </div>
 
@@ -303,7 +302,7 @@
 
                 <span class="clean-number">
                     {{ "{:,}".format(
-                        metrics.dataset.dataset_1.rows_after_duplicate_removal
+                    metrics.dataset.dataset_1.rows_after_duplicate_removal
                     ) }}
                 </span>
 
@@ -352,7 +351,7 @@
                     {{ "{:,}".format(metrics.dataset.merged_rows_after_cleaning) }}
                 </span>
 
-                <h3>Final Training Dataset</h3>
+                <h3>Final Cleaned Dataset</h3>
 
                 <p>
                     Records remaining after preprocessing and filtering.
@@ -438,7 +437,7 @@
             <div class="pipeline-step">
                 <span>04</span>
                 <strong>Column Alignment</strong>
-                <small>416 symptom features</small>
+                <small>{{ metrics.dataset.features }} symptom features</small>
             </div>
 
             <div class="pipeline-arrow">↓</div>
@@ -461,7 +460,12 @@
 
             <div class="pipeline-step">
                 <span>07</span>
-                <strong>80 / 20 Split</strong>
+                <strong>
+                    {{ ((1 - metrics.split.test_size) * 100)|round(0)|int }}
+                    /
+                    {{ (metrics.split.test_size * 100)|round(0)|int }}
+                    Split
+                </strong>
                 <small>Training & testing</small>
             </div>
 
@@ -469,8 +473,8 @@
 
             <div class="pipeline-step highlight-step">
                 <span>08</span>
-                <strong>Random Forest</strong>
-                <small>120 decision trees</small>
+                <strong>{{ metrics.model.algorithm }}</strong>
+                <small>{{ metrics.model.n_estimators }} decision trees</small>
             </div>
 
             <div class="pipeline-arrow">↓</div>
@@ -517,21 +521,22 @@
 
             <div class="split-bar">
 
-                <div class="training-bar"
-                     style="width: {{ (1 - metrics.split.test_size) * 100 }}%;">
-                    80% Training
+                <div class="training-bar" style="width: {{ (1 - metrics.split.test_size) * 100 }}%;">
+                    {{ ((1 - metrics.split.test_size) * 100)|round(0)|int }}% Training
                 </div>
 
-                <div class="testing-bar"
-                     style="width: {{ metrics.split.test_size * 100 }}%;">
-                    20% Testing
+                <div class="testing-bar" style="width: {{ metrics.split.test_size * 100 }}%;">
+                    {{ (metrics.split.test_size * 100)|round(0)|int }}% Testing
                 </div>
 
             </div>
 
             <p class="split-note">
-                The model was trained on 80% of the cleaned dataset and
-                evaluated on the remaining 20% unseen data.
+                The model was trained on
+                {{ ((1 - metrics.split.test_size) * 100)|round(0)|int }}%
+                of the cleaned dataset and evaluated on the remaining
+                {{ (metrics.split.test_size * 100)|round(0)|int }}%
+                unseen data.
             </p>
 
         </div>
@@ -590,9 +595,9 @@
         <strong>Important:</strong>
 
         The {{ metrics.performance.accuracy_percent }}% value shown above is
-        the Random Forest model's accuracy on the held-out test dataset.
-        It should not be interpreted as the confidence of an individual
-        disease prediction shown to a user.
+        the {{ metrics.model.algorithm }} model's accuracy on the held-out
+        test dataset. It should not be interpreted as the confidence of an
+        individual disease prediction shown to a user.
 
     </div>
 

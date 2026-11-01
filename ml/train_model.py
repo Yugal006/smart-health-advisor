@@ -6,10 +6,12 @@ import os
 import json
 
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score, classification_report
 
+from xgboost import XGBClassifier
 
+ 
 # =====================================================
 # 1. CONFIGURATION
 # =====================================================
@@ -19,9 +21,9 @@ DATASET_2 = "data/expanded_symptoms.csv"
 
 MODEL_PATH = "ml/disease_model.pkl"
 FEATURE_PATH = "ml/symptom_columns.pkl"
+LABEL_ENCODER_PATH = "ml/disease_label_encoder.pkl"
 METRICS_PATH = "ml/model_metrics.json"
 
-# Compression level for joblib (1–9)
 COMPRESSION_LEVEL = 3
 
 
@@ -68,7 +70,7 @@ df2.rename(columns={df2.columns[0]: "disease"}, inplace=True)
 
 
 # =====================================================
-# 5. REMOVE DUPLICATES FROM EACH DATASET
+# 5. REMOVE DUPLICATES
 # =====================================================
 
 print("\nRemoving duplicate records...")
@@ -87,7 +89,7 @@ print("Dataset 2 duplicates removed:", duplicates_removed_df2)
 
 
 # =====================================================
-# 6. REMOVE RECORDS WITH MISSING DISEASE LABEL
+# 6. REMOVE MISSING DISEASE LABELS
 # =====================================================
 
 print("\nChecking disease labels...")
@@ -98,8 +100,10 @@ missing_disease_df2 = int(df2["disease"].isna().sum())
 df1 = df1.dropna(subset=["disease"])
 df2 = df2.dropna(subset=["disease"])
 
-print("Missing disease labels removed:",
-      missing_disease_df1 + missing_disease_df2)
+print(
+    "Missing disease labels removed:",
+    missing_disease_df1 + missing_disease_df2
+)
 
 
 # =====================================================
@@ -117,8 +121,15 @@ print("Total symptoms after merge:", len(all_symptoms))
 
 ordered_columns = ["disease"] + sorted(all_symptoms)
 
-df1 = df1.reindex(columns=ordered_columns, fill_value=0)
-df2 = df2.reindex(columns=ordered_columns, fill_value=0)
+df1 = df1.reindex(
+    columns=ordered_columns,
+    fill_value=0
+)
+
+df2 = df2.reindex(
+    columns=ordered_columns,
+    fill_value=0
+)
 
 
 # =====================================================
@@ -127,7 +138,10 @@ df2 = df2.reindex(columns=ordered_columns, fill_value=0)
 
 print("\nMerging datasets...")
 
-df = pd.concat([df1, df2], ignore_index=True)
+df = pd.concat(
+    [df1, df2],
+    ignore_index=True
+)
 
 print("Merged dataset shape:", df.shape)
 
@@ -138,18 +152,34 @@ print("Merged dataset shape:", df.shape)
 
 print("\nChecking merged dataset for missing values...")
 
-missing_before = int(df.isna().sum().sum())
+missing_before = int(
+    df.isna().sum().sum()
+)
 
-# For symptom columns, missing means the symptom is not present.
-# Therefore we treat missing symptom values as 0.
-symptom_columns_temp = [col for col in df.columns if col != "disease"]
+symptom_columns_temp = [
+    col for col in df.columns
+    if col != "disease"
+]
 
-df[symptom_columns_temp] = df[symptom_columns_temp].fillna(0)
+# Missing symptom means symptom is absent
+df[symptom_columns_temp] = (
+    df[symptom_columns_temp]
+    .fillna(0)
+)
 
-missing_after = int(df.isna().sum().sum())
+missing_after = int(
+    df.isna().sum().sum()
+)
 
-print("Missing values before handling:", missing_before)
-print("Missing values after handling:", missing_after)
+print(
+    "Missing values before handling:",
+    missing_before
+)
+
+print(
+    "Missing values after handling:",
+    missing_after
+)
 
 
 # =====================================================
@@ -158,12 +188,15 @@ print("Missing values after handling:", missing_after)
 
 print("\nRemoving rare diseases...")
 
-disease_counts_before = df["disease"].value_counts()
+disease_counts_before = (
+    df["disease"].value_counts()
+)
 
-# Keep diseases having more than one record.
-valid_diseases = disease_counts_before[
-    disease_counts_before > 1
-].index
+valid_diseases = (
+    disease_counts_before[
+        disease_counts_before > 1
+    ].index
+)
 
 rare_rows_removed = int(
     (~df["disease"].isin(valid_diseases)).sum()
@@ -173,11 +206,24 @@ rare_classes_removed = int(
     (disease_counts_before <= 1).sum()
 )
 
-df = df[df["disease"].isin(valid_diseases)].copy()
+df = df[
+    df["disease"].isin(valid_diseases)
+].copy()
 
-print("Rare disease classes removed:", rare_classes_removed)
-print("Rare disease records removed:", rare_rows_removed)
-print("Dataset after filtering:", df.shape)
+print(
+    "Rare disease classes removed:",
+    rare_classes_removed
+)
+
+print(
+    "Rare disease records removed:",
+    rare_rows_removed
+)
+
+print(
+    "Dataset after filtering:",
+    df.shape
+)
 
 
 # =====================================================
@@ -187,64 +233,133 @@ print("Dataset after filtering:", df.shape)
 print("\nPreparing feature matrix...")
 
 y = df["disease"]
-X = df.drop("disease", axis=1)
 
-# Convert symptom values to integers.
+X = df.drop(
+    "disease",
+    axis=1
+)
+
+# Convert symptoms to integers
 X = X.astype("int8")
 
 symptom_columns = X.columns.tolist()
 
-print("Feature matrix:", X.shape)
-print("Number of symptoms/features:", len(symptom_columns))
-print("Number of disease classes:", y.nunique())
+print(
+    "Feature matrix:",
+    X.shape
+)
+
+print(
+    "Number of symptoms/features:",
+    len(symptom_columns)
+)
+
+print(
+    "Number of disease classes:",
+    y.nunique()
+)
 
 
 # =====================================================
-# 12. TRAIN TEST SPLIT
+# 12. ENCODE DISEASE LABELS
 # =====================================================
 
-print("\nSplitting dataset...")
+print("\nEncoding disease labels...")
+
+label_encoder = LabelEncoder()
+
+y_encoded = label_encoder.fit_transform(y)
+
+number_of_classes = len(
+    label_encoder.classes_
+)
+
+print(
+    "Encoded disease classes:",
+    number_of_classes
+)
+
+print(
+    "Example:",
+    label_encoder.classes_[0],
+    "->",
+    y_encoded[0]
+)
+
+
+# =====================================================
+# 13. TRAIN TEST SPLIT — 70/30
+# =====================================================
+
+print("\nSplitting dataset 70/30...")
 
 X_train, X_test, y_train, y_test = train_test_split(
     X,
-    y,
-    test_size=0.2,
+    y_encoded,
+    test_size=0.30,
     random_state=42,
-    stratify=y
+    stratify=y_encoded
 )
 
-print("Training samples:", len(X_train))
-print("Testing samples:", len(X_test))
+print(
+    "Training samples:",
+    len(X_train)
+)
+
+print(
+    "Testing samples:",
+    len(X_test)
+)
 
 
 # =====================================================
-# 13. TRAIN RANDOM FOREST MODEL
+# 14. TRAIN XGBOOST MODEL
 # =====================================================
 
-print("\nTraining Random Forest model...")
+print("\nTraining XGBoost model...")
 
-model = RandomForestClassifier(
-    n_estimators=120,
-    max_depth=25,
-    min_samples_split=5,
+model = XGBClassifier(
+    n_estimators=150,
+    max_depth=6,
+    learning_rate=0.1,
+    subsample=0.8,
+    colsample_bytree=0.8,
+
+    objective="multi:softprob",
+
+    num_class=number_of_classes,
+
+    eval_metric="mlogloss",
+
+    tree_method="hist",
+
     n_jobs=-1,
+
     random_state=42
 )
 
-model.fit(X_train, y_train)
+model.fit(
+    X_train,
+    y_train
+)
 
-print("Model training completed")
+print(
+    "XGBoost training completed"
+)
 
 
 # =====================================================
-# 14. EVALUATE MODEL
+# 15. EVALUATE MODEL
 # =====================================================
 
 print("\nEvaluating model...")
 
 y_pred = model.predict(X_test)
 
-accuracy = accuracy_score(y_test, y_pred)
+accuracy = accuracy_score(
+    y_test,
+    y_pred
+)
 
 report = classification_report(
     y_test,
@@ -253,7 +368,13 @@ report = classification_report(
     zero_division=0
 )
 
-print("\nModel Accuracy:", round(accuracy * 100, 2), "%")
+
+print(
+    "\nXGBoost Accuracy:",
+    round(accuracy * 100, 2),
+    "%"
+)
+
 
 print("\nClassification Report:\n")
 
@@ -267,109 +388,212 @@ print(
 
 
 # =====================================================
-# 15. SAVE MODEL METRICS
+# 16. SAVE MODEL METRICS
 # =====================================================
 
 print("\nSaving model metrics...")
 
 metrics = {
+
     "model": {
-        "algorithm": "Random Forest",
-        "n_estimators": 120,
-        "max_depth": 25,
-        "min_samples_split": 5,
+
+        "algorithm": "XGBoost",
+
+        "n_estimators": 150,
+
+        "max_depth": 6,
+
+        "learning_rate": 0.1,
+
+        "subsample": 0.8,
+
+        "colsample_bytree": 0.8,
+
+        "objective": "multi:softprob",
+
         "random_state": 42
     },
 
+
     "dataset": {
+
         "dataset_1": {
-            "rows_original": int(before_df1),
-            "rows_after_duplicate_removal": int(len(df1)),
-            "duplicates_removed": int(duplicates_removed_df1)
+
+            "rows_original":
+                int(before_df1),
+
+            "rows_after_duplicate_removal":
+                int(len(df1)),
+
+            "duplicates_removed":
+                int(duplicates_removed_df1)
         },
+
 
         "dataset_2": {
-            "rows_original": int(before_df2),
-            "rows_after_duplicate_removal": int(len(df2)),
-            "duplicates_removed": int(duplicates_removed_df2)
+
+            "rows_original":
+                int(before_df2),
+
+            "rows_after_duplicate_removal":
+                int(len(df2)),
+
+            "duplicates_removed":
+                int(duplicates_removed_df2)
         },
 
-        "merged_rows_before_filtering": int(
-            before_df1 + before_df2
-        ),
 
-        "merged_rows_after_cleaning": int(len(df)),
+        "merged_rows_before_filtering":
+            int(before_df1 + before_df2),
 
-        "columns": int(len(df.columns)),
 
-        "features": int(len(symptom_columns)),
+        "merged_rows_after_cleaning":
+            int(len(df)),
 
-        "disease_classes": int(y.nunique()),
 
-        "missing_values_before": int(missing_before),
+        "columns":
+            int(len(df.columns)),
 
-        "missing_values_after": int(missing_after),
 
-        "duplicate_rows_removed": int(
-            duplicates_removed_df1 +
-            duplicates_removed_df2
-        ),
+        "features":
+            int(len(symptom_columns)),
 
-        "rare_disease_classes_removed": int(
-            rare_classes_removed
-        ),
 
-        "rare_disease_records_removed": int(
-            rare_rows_removed
-        )
+        "disease_classes":
+            int(y.nunique()),
+
+
+        "missing_values_before":
+            int(missing_before),
+
+
+        "missing_values_after":
+            int(missing_after),
+
+
+        "duplicate_rows_removed":
+            int(
+                duplicates_removed_df1 +
+                duplicates_removed_df2
+            ),
+
+
+        "rare_disease_classes_removed":
+            int(rare_classes_removed),
+
+
+        "rare_disease_records_removed":
+            int(rare_rows_removed)
     },
+
 
     "split": {
-        "training_samples": int(len(X_train)),
-        "testing_samples": int(len(X_test)),
-        "test_size": 0.20
+
+        "training_samples":
+            int(len(X_train)),
+
+        "testing_samples":
+            int(len(X_test)),
+
+        "training_ratio":
+            0.70,
+
+        "test_size":
+            0.30
     },
 
+
     "performance": {
-        "accuracy": round(float(accuracy), 6),
-        "accuracy_percent": round(float(accuracy * 100), 2),
 
-        "precision_macro": round(
-            float(report["macro avg"]["precision"]), 6
-        ),
+        "accuracy":
+            round(float(accuracy), 6),
 
-        "recall_macro": round(
-            float(report["macro avg"]["recall"]), 6
-        ),
+        "accuracy_percent":
+            round(float(accuracy * 100), 2),
 
-        "f1_macro": round(
-            float(report["macro avg"]["f1-score"]), 6
-        ),
 
-        "precision_weighted": round(
-            float(report["weighted avg"]["precision"]), 6
-        ),
+        "precision_macro":
+            round(
+                float(
+                    report["macro avg"]["precision"]
+                ),
+                6
+            ),
 
-        "recall_weighted": round(
-            float(report["weighted avg"]["recall"]), 6
-        ),
 
-        "f1_weighted": round(
-            float(report["weighted avg"]["f1-score"]), 6
-        )
+        "recall_macro":
+            round(
+                float(
+                    report["macro avg"]["recall"]
+                ),
+                6
+            ),
+
+
+        "f1_macro":
+            round(
+                float(
+                    report["macro avg"]["f1-score"]
+                ),
+                6
+            ),
+
+
+        "precision_weighted":
+            round(
+                float(
+                    report["weighted avg"]["precision"]
+                ),
+                6
+            ),
+
+
+        "recall_weighted":
+            round(
+                float(
+                    report["weighted avg"]["recall"]
+                ),
+                6
+            ),
+
+
+        "f1_weighted":
+            round(
+                float(
+                    report["weighted avg"]["f1-score"]
+                ),
+                6
+            )
     }
 }
 
-os.makedirs("ml", exist_ok=True)
 
-with open(METRICS_PATH, "w") as f:
-    json.dump(metrics, f, indent=4)
+os.makedirs(
+    "ml",
+    exist_ok=True
+)
 
-print("Metrics saved to:", METRICS_PATH)
+
+with open(
+    METRICS_PATH,
+    "w"
+) as f:
+
+    json.dump(
+        metrics,
+        f,
+        indent=4
+    )
+
+
+print(
+    "Metrics saved to:",
+    METRICS_PATH
+)
 
 
 # =====================================================
-# 16. SAVE MODEL
+# 17. SAVE MODEL
 # =====================================================
 
 print("\nSaving model with compression...")
@@ -380,13 +604,37 @@ joblib.dump(
     compress=COMPRESSION_LEVEL
 )
 
+
 joblib.dump(
     symptom_columns,
     FEATURE_PATH,
     compress=COMPRESSION_LEVEL
 )
 
-print("Model saved to:", MODEL_PATH)
-print("Symptom columns saved to:", FEATURE_PATH)
 
-print("\nTraining pipeline completed successfully 🚀")
+joblib.dump(
+    label_encoder,
+    LABEL_ENCODER_PATH,
+    compress=COMPRESSION_LEVEL
+)
+
+
+print(
+    "Model saved to:",
+    MODEL_PATH
+)
+
+print(
+    "Symptom columns saved to:",
+    FEATURE_PATH
+)
+
+print(
+    "Disease label encoder saved to:",
+    LABEL_ENCODER_PATH
+)
+
+
+print(
+    "\nXGBoost training pipeline completed successfully 🚀"
+)

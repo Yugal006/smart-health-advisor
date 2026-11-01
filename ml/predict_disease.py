@@ -9,7 +9,10 @@ import re
 # =====================================
 
 BASE_DIR = os.path.dirname(__file__)
-
+LABEL_ENCODER_PATH = os.path.join(
+    BASE_DIR,
+    "disease_label_encoder.pkl"
+)
 MODEL_PATH = os.path.join(BASE_DIR, "disease_model.pkl")
 FEATURE_PATH = os.path.join(BASE_DIR, "symptom_columns.pkl")
 INDEX_1 = os.path.join(BASE_DIR, "disease_symptom_map.pkl")
@@ -19,13 +22,18 @@ INDEX_2 = os.path.join(BASE_DIR, "symptom_disease_map.pkl")
 # LAZY LOADING (IMPORTANT 🔥)
 # =====================================
 
+label_encoder = None
 model = None
 symptom_columns = None
 disease_symptom_map = None
 symptom_disease_map = None
 
 def load_resources():
-    global model, symptom_columns, disease_symptom_map, symptom_disease_map
+    global model
+    global symptom_columns
+    global disease_symptom_map
+    global symptom_disease_map
+    global label_encoder
 
     if model is None:
         model = joblib.load(MODEL_PATH)
@@ -39,6 +47,8 @@ def load_resources():
     if symptom_disease_map is None:
         symptom_disease_map = joblib.load(INDEX_2)
 
+    if label_encoder is None:
+        label_encoder = joblib.load(LABEL_ENCODER_PATH)
 # # =====================================
 # # 2. LOAD DATASET
 # # =====================================
@@ -278,7 +288,7 @@ def apply_clinical_rules(user_symptoms, predictions):
 
                     print("Boosting:", p["disease"])
 
-                    p["probability"] = min(p["probability"] + 8, 100)
+                    p["probability"] = float(min(p["probability"] + 8, 100))
 
     predictions = sorted(predictions, key=lambda x: x["probability"], reverse=True)
 
@@ -400,13 +410,18 @@ def predict_disease(user_symptoms, top_k=5):
 
     # ML prediction
     probs = model.predict_proba(X_input)[0]
-    classes = model.classes_
+    class_indices = model.classes_
 
     results = []
-    
-    for cls, p in zip(classes, probs):
 
-        ml_score = p * 100
+    for class_index, p in zip(class_indices, probs):
+
+        # Convert XGBoost's numeric class back to disease name
+        cls = label_encoder.inverse_transform(
+            [int(class_index)]
+            )[0]
+
+        ml_score = float(p) * 100
 
         match_score = symptom_match_score(symptoms_mapped, cls)
         
@@ -431,8 +446,8 @@ def predict_disease(user_symptoms, top_k=5):
         final_score = final_score * prevalence
 
         results.append({
-            "disease": cls,
-            "probability": round(final_score, 2)
+            "disease": str(cls),
+            "probability": float(round(final_score, 2))
         })
 
     # Sort
